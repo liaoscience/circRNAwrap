@@ -1,0 +1,74 @@
+################# content, detected circRNAs, 
+################# use several tools for circRNA detection
+################# 1 KNIFE
+################# 2 find_circ
+################# 3 acfs
+################# 4 CIRI-full_v2
+################# 5 CIRCexplorer2
+################# 6 circRNA_finder
+################# 7 mapsplice
+################# 8 DCC
+################# 8 linear RNA abundance analysis
+
+# tools and pipeline
+# KNIFE bowtie and bowtie2
+# find_circ bowtie2
+# acfs CIRI CIRCexplorer2 circRNA_finder mapsplice
+
+
+# sample related
+sample=$1
+
+threads=
+
+#raw data the same length reads data
+# for CIRI-AS
+raw_reads=
+
+# for CIRCexplorer2
+polyA_tophat=/home/lilin/workdir/data/circRNA/data/polyA/SRR8083958_tophat/
+
+
+
+
+# reference and index
+genome=/home/lilin/workdir/reference/gatk4/hg19_ref/ucsc.hg19.fasta # include bwa faidx file
+GTF=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_genes.gtf
+
+bowtie1_index=/home/lilin/workdir/reference/gatk4/hg19_ref/bowtie1/ucsc.hg19
+bowtie2_index=/home/lilin/workdir/reference/gatk4/hg19_ref/bowtie2/ucsc.hg19
+STAR_index=/home/lilin/workdir/reference/gatk4/hg19_ref/STAR/
+mapsplice_genome=/home/lilin/workdir/reference/gatk4/hg19_ref/mapsplice/
+mapsplice_index=/home/lilin/workdir/reference/gatk4/hg19_ref/mapsplice/total
+hisat2_index=/home/lilin/workdir/reference/gatk4/hg19_ref/hisat2/hg19/genome
+gene_annotation_hg19=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_ens.txt
+
+# align tools
+hisat2=/home/lilin/miniconda2/bin/hisat2
+STAR=/home/lilin/miniconda2/bin/STAR
+bwa=/home/lilin/miniconda2/bin/bwa
+samtools=/home/lilin/workdir/git/samtools-1.4/samtools
+tophat2=/home/lilin/miniconda2/bin/tophat
+stringtie=/home/lilin/miniconda2/bin/stringtie
+
+# detection tools 
+KNIFE=/home/lilin/workdir/git/KNIFE-1.4/circularRNApipeline_Standalone/
+find_circ=/home/lilin/workdir/git/find_circ
+acfs=/home/lilin/workdir/git/acfs/ACF_MAKE.pl
+ciri=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_v2.0.6/CIRI2.pl
+CIRCexplorer2=/home/lilin/miniconda2/bin/CIRCexplorer2
+circRNA_finder=/home/lilin/workdir/git/circRNA_finder
+MAPSPLICE_DIR=/home/lilin/miniconda2/envs/metawrap-env/bin/
+DCC=/home/lilin/miniconda2/bin/DCC
+
+# abundance and transcripts
+ciri_as=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_AS_v1.2/CIRI_AS_v1.2.pl
+sailfish_cir=/home/lilin/workdir/git/sailfish-cir/sailfish_cir.py
+
+# others
+acfs_config=/home/lilin/workdir/git/acfs/acfs_hg19.txt
+hisat2_head_hg19=/home/lilin/workdir/data/circRNA/data/hisat2.sam
+REF=/home/lilin/workdir/reference/gatk4/hg19_ref/annotation/hg19_gene.txt
+
+put_together_ws="/home/lilin/workdir/data/circRNA/put_together_ws.pl"
+mosdepth=mosdepth

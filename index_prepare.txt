@@ -1,0 +1,111 @@
+#prepare 
+#software required index and reference and annotation files
+
+
+#hisat2
+#STAR
+#bowtie2
+#bwa
+#bwa acfs
+
+
+#find_circ
+#bowtie2 index, chr index
+#mapsplice
+# index, total fasta
+#acfs
+# index, chr, gtf annotation
+#circRNA_finder
+#STAR index
+
+
+KNIFE
+from online https://mega.nz/#F!RtsCHCQb!fyxYNWjoCef5Ie361vUxiA
+index files should be put in right direction
+cd ~/KNIFE-1.4/circularRNApipeline_Standalone/
+mkdir index
+cp hg19_BT1index.tar.gz hg19_BT2index.tar.gz mm10_BT1index.tar.gz mm10_BT2index.tar.gz
+cd ~/denovo_scripts/
+mkdir index
+cp hg19_BT1index.tar.gz
+
+
+##################################### index
+hisat2 download https://ccb.jhu.edu/software/hisat2/index.shtml
+bowtie2-build
+
+
+#get the exon related bed format
+awk -F '\t' '{if(/exon/) print $1"\t"$4"\t"$5"\t"$3"\t"$7"\t"$9}' gencode.v19.all.gtf | awk -F '[ \t]' '{printf $0"\t";for(i=1;i<=NF;i++)if($i~/exon_number/ || $i~/gene_name/)print $(i+1)}' | sed 'N;s/\n/\t/' | awk -F '\t' '{print $1"\t"$2"\t"$3"\t"$7"\t"$8"\t"$5"\t"$6}' > gencode.v19.all.exon.bed
+awk -F '\t' '{if(/gene_id/ && /gene_type/ && /gene_name/) print $9}' gencode.v19.all.gtf | awk -F '[ \t]' '{for(i=1;i<=NF;i++)if($i~/gene_name/ || $i~/gene_id/ || $i~/gene_type/ )print $(i+1)}' | awk 'ORS=NR%3?" ":"\n"{print}' | awk '!a[$0]++'| sed 's/[";]//g' > gene_id_type_name.txt
+
+#get the UCSC format refFlat.gtf
+awk '{if(/gene_name/ && /transcript_name/) print }' gencode.v19.all.gtf | awk -F '[ \t]' '{printf $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"0.000000"\t"$7"\t"$8"\t"; for(i=9;i<=NF;i++)if($i~/gene_name/ || $i~/transcript_name/ )print $i" "$(i+1) }' | sed 's/name/id/g' | awk 'ORS=NR%2?" ":"\n"{print}' > gencode.v19.refflat.gtf
+
+chr1	hg19_refFlat	exon	17233	17368	0.000000	-	.	gene_id "WASH7P"; transcript_id "WASH7P"; 
+chr1	hg19_refFlat	exon	17606	17742	0.000000	-	.	gene_id "WASH7P"; transcript_id "WASH7P"; 
+chr1	HAVANA	exon	11869	12227	.	+	.	gene_id "ENSG00000223972.5"; transcript_id "ENST00000456328.2"; gene_type "transcribed_unprocessed_pseudogene"; gene_status "KNOWN"; gene_name "DDX11L1"; transcript_type "processed_transcript"; transcript_status "KNOWN"; transcript_name "DDX11L1-002"; exon_number 1; exon_id "ENSE00002234944.1"; level 2; tag "basic"; transcript_support_level "1"; havana_gene "OTTHUMG00000000961.2"; havana_transcript "OTTHUMT00000362751.1";
+
+
+
+# gtf to genepred
+# ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz
+
+gencode.v19.all.bed
+gencode.v19.refflat_chr.gtf
+gencode.v19.utr.bed
+gencode.v19.transcript.bed
+gencode.v19.annotation.intron.bed
+gencode.v19.annotation.exon.bed
+gencode.v19.annotation.single.bed
+
+
+####################   acfs specific gtf file format
+gtfToGenePred gencode.v19.all.gtf gencode.v19.all.refFlat.txt
+awk -F '\t' '{ n9 = split($9, t9, ",");n10 = split($10, t10, ","); for (i = 0; ++i < n9;) { print $2"\tsplit\texon\t"t9[i]"\t"t10[i]"\t"$1"\t"$3"\t"$1"\t"$1"___"i"___"$8 }}' gencode.v19.annotation.refFlat.txt > gencode.v19.annotation.acfs.gtf
+
+#extract all bed
+awk '{ print $2"\t"$4"\t"$5"\t"$1"\t"$8"\t"$3"\t"$6"\t"$7"\t"$8"\t"$8"\t"$9"\t"$10}' gencode.v19.annotation.genePred.txt > all.bed
+bedtools sort -i all.bed > gencode.v19.annotation.all.bed
+rm all.bed
+
+#extract transcript
+awk '{if($3~/transcript/) print $1,$4,$5,$12,$10,$7}' gencode.v19.annotation.gtf | sed 's/[";]//g' | sed 's/ /\t/g' > transcript.bed
+bedtools sort -i transcript.bed > gencode.v19.annotation.transcript.bed
+rm transcript.bed
+
+#extract single
+awk '{ if($8==1) print $2"\t"$4"\t"$5"\t"$1"\t"$8"\t"$3}' gencode.v19.annotation.genePred.txt > single.bed
+bedtools sort -i single.bed > gencode.v19.annotation.single.bed
+rm single.bed
+
+#extract intron
+#gtfToGenePred -ignoreGroupsWithoutExons gencode.v19.annotation.gtf gencode.v19.annotation.refFlat.txt
+awk '{ n9 = split($9, t9, ",");n10 = split($10, t10, ","); for (i = 0; ++i < n9-1;) { print $2"\t"t10[i]"\t"t9[i + 1]"\t"i "I@" $1"\t"$8"\t"$3 }}' gencode.v19.annotation.genePred.txt > intron.bed
+bedtools sort -i intron.bed > gencode.v19.annotation.intron.bed
+rm  intron.bed
+
+#extract exon
+awk '{ n9 = split($9, t9, ",");n10 = split($10, t10, ","); for (i = 0; ++i < n9;) { print $2"\t"t9[i]"\t"t10[i]"\t"i "E@" $1"\t"$8"\t"$3 }}' gencode.v19.annotation.genePred.txt > exon.bed
+bedtools sort -i exon.bed > gencode.v19.annotation.exon.bed
+rm exon.bed
+
+#extract utr
+awk '{if($3~/start_codon/) print $1"\t"$4"\t"$5"\t"$18"\t"$10"\t"$7"\t"$12"\t"$14}' gencode.v19.annotation.gtf | sed 's/[";]//g' > 5utr.bed1
+awk '{if($3~/stop_codon/) print $1"\t"$4"\t"$5"\t"$18"\t"$10"\t"$7"\t"$12"\t"$14}' gencode.v19.annotation.gtf | sed 's/[";]//g' > 3utr.bed1
+awk '{if($3~/transcript/) print $1"\t"$4"\t"$5"\t"$18"\t"$10"\t"$7"\t"$12"\t"$14 }' gencode.v19.annotation.gtf | sed 's/[";]//g' > transcript.bed1
+awk '{if($3~/transcript/) print $1"\t"$4"\t"$5"\t"$12"\t"$10"\t"$7"\t"$18"\t"$19 }' gencode.v19.annotation.gtf | sed 's/[";]//g' > transcript.name.txt
+### positive and negative are different
+awk '{if($6~/-/) print }' 3utr.bed1 > 3utr.n.bed1
+awk '{if($6~/+/) print }' 3utr.bed1 > 3utr.p.bed1
+awk '{if($6~/-/) print }' 5utr.bed1 > 5utr.n.bed1
+awk '{if($6~/+/) print }' 5utr.bed1 > 5utr.p.bed1
+awk 'NR==FNR{a[$7]=$0;next}NR>FNR{if($7 in a)print $0"\t"a[$7]}' 3utr.p.bed1 transcript.bed1 | awk '{ print $1"\t"($11+1)"\t"$3"\t"$4"\t"$5"\t"$6"\t"($3-$2)"\t3utr\t"$7"\t"$8 }' | awk '{if( $2 < $3 ) print }' > 3utr.p.bed2
+awk 'NR==FNR{a[$7]=$0;next}NR>FNR{if($7 in a)print $0"\t"a[$7]}' 3utr.n.bed1 transcript.bed1 | awk '{ print $1"\t"$2"\t"$10"\t"$4"\t"$5"\t"$6"\t"($3-$2)"\t3utr\t"$7"\t"$8 }' | awk '{if($3>$2) print }' > 3utr.n.bed2
+awk 'NR==FNR{a[$7]=$0;next}NR>FNR{if($7 in a)print $0"\t"a[$7]}' 5utr.p.bed1 transcript.bed1 | awk '{ print $1"\t"$2"\t"$10"\t"$4"\t"$5"\t"$6"\t"($3-$2)"\t5utr\t"$7"\t"$8 }' | awk '{if($3>$2) print }' > 5utr.p.bed2
+awk 'NR==FNR{a[$7]=$0;next}NR>FNR{if($7 in a)print $0"\t"a[$7]}' 5utr.n.bed1 transcript.bed1 | awk '{ print $1"\t"($11+1)"\t"$3"\t"$4"\t"$5"\t"$6"\t"($3-$2)"\t5utr\t"$7"\t"$8 }' | awk '{if( $2 < $3 ) print }' > 5utr.n.bed2
+cat 3utr.p.bed2 3utr.n.bed2 5utr.p.bed2 5utr.n.bed2 > utr1.bed1
+bedtools sort -i utr1.bed1 > gencode.v19.annotation.utr.bed
+rm *.bed1
+rm *.bed2
+
