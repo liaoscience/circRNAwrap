@@ -8,7 +8,7 @@
 ################# 6 circRNA_finder
 ################# 7 mapsplice
 ################# 8 DCC
-################# 8 linear RNA abundance analysis
+################# 9 linear RNA abundance analysis
 
 # tools and pipeline
 # KNIFE bowtie and bowtie2
@@ -19,7 +19,7 @@
 # sample related
 sample=$1
 
-threads=
+threads=8
 
 #raw data the same length reads data
 # for CIRI-AS
@@ -27,7 +27,6 @@ raw_reads=
 
 # for CIRCexplorer2
 polyA_tophat=/home/lilin/workdir/data/circRNA/data/polyA/SRR8083958_tophat/
-
 
 
 
@@ -64,6 +63,7 @@ DCC=/home/lilin/miniconda2/bin/DCC
 # abundance and transcripts
 ciri_as=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_AS_v1.2/CIRI_AS_v1.2.pl
 sailfish_cir=/home/lilin/workdir/git/sailfish-cir/sailfish_cir.py
+RAISE=
 
 # others
 acfs_config=/home/lilin/workdir/git/acfs/acfs_hg19.txt
@@ -71,4 +71,4 @@ hisat2_head_hg19=/home/lilin/workdir/data/circRNA/data/hisat2.sam
 REF=/home/lilin/workdir/reference/gatk4/hg19_ref/annotation/hg19_gene.txt
 
 put_together_ws="/home/lilin/workdir/data/circRNA/put_together_ws.pl"
-mosdepth=mosdepth
+mosdepth=/home/lilin/miniconda2/bin/mosdepth

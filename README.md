@@ -1,21 +1,21 @@
 ######################circRNAwrap is a flexible pipeline for circRNA expand analysis
 
-#####################
+##################### from the RNA-seq data paired fastq files to circRNA list, transcripts predicted info, and circRNA abundance. 
 
 
 circRNAwrap
 ==============
 
 Contains the following files:
-- prepare_files.txt
-- circRNAwrap_detections.bash
-- circRNAwrap_abundance_transcripts.bash
+- circRNAwrap_configs.txt
+- circRNAwrap_align_detections.bash
+- circRNAwrap_transcript_abundance.bash
 
-test on 8 circRNA detection tools
+test on 8 circRNA detection tools, users could add more tools if necessary
  - KNIFE
  - find_circ
  - CIRI2
- - CIRCexplorer2
+ - CIRCexplorer2 and CIRCexplorer
  - mapsplice
  - acfs
  - circRNA_finder
@@ -59,13 +59,17 @@ bash circRNAwrap_abundance_transcripts.bash
 For each library the following output files or directions are produced:
 
 folds:
-a) <lib_name>_fc: find_circ output
-b) <lib_name>_acfs: acfs output
-c) <lib_name>_mapsplice: mapsplice output
-d) circRNA_validation: circRNA realignment details
-files:
-a) <lib name>_filteredJunctions.bed: circRNA_finder output
-b) <lib name>_total.txt: circRNA abundance
-b) <lib name>_total.txt: circRNA abundance detail
+a) <lib_name>_KNIFE:                KNIFE output
+b) <lib_name>_find_circ:            find_circ output
+c) <lib_name>_acfs:                 acfs output
+d) <lib_name>_CIRI:                 CIRI output, CIRI-AS output
+e) <lib_name>_CIRCexplorer2:        CIRCexplorer2 output, include backsplice and alternative splice
+f) <lib_name>_circRNA_finder:       circRNA_finder output
+g) <lib_name>_mapsplice:            mapsplice output
+h) <lib_name>_DCC:                  DCC output
 
-email: llsnnu@163.com
+i) <lib_name>_circRNA_validation:   circRNA realignment details
+j) <lib_name>_RAISE:                RAISE output
+k) <lib_name>_sailfish-cir:         sailfish-cir output
+
+l) <lib_name>_sum:                  sum result
