@@ -1,0 +1,62 @@
+################# circRNAwrap config files
+################# 
+
+# circRNAwrap direction
+circRNAwrap=/home/lilin/workdir/data/circRNA/data
+
+
+
+# reference and index
+genome=/home/lilin/workdir/reference/gatk4/hg19_ref/ucsc.hg19.fasta
+mapsplice_genome=/home/lilin/workdir/reference/gatk4/hg19_ref/mapsplice/
+
+# should include bwa faidx file
+GTF=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_genes.gtf
+gene_annotation_hg19=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_ens.txt
+hisat2_head_hg19=/home/lilin/workdir/data/circRNA/data/hisat2.sam
+
+annotation_dir=/home/lilin/workdir/reference/gatk4/hg19_ref/annotation
+
+# index
+bowtie1_index=/home/lilin/workdir/reference/gatk4/hg19_ref/bowtie1/ucsc.hg19
+bowtie2_index=/home/lilin/workdir/reference/gatk4/hg19_ref/bowtie2/ucsc.hg19
+STAR_index=/home/lilin/workdir/reference/gatk4/hg19_ref/STAR/
+mapsplice_index=/home/lilin/workdir/reference/gatk4/hg19_ref/mapsplice/total
+hisat2_index=/home/lilin/workdir/reference/gatk4/hg19_ref/hisat2/hg19/genome
+hisat2_reference=/home/lilin/workdir/reference/gatk4/hg19_ref/hisat2/hg19/genome
+
+# align tools
+hisat2=/home/lilin/miniconda2/bin/hisat2
+STAR=/home/lilin/miniconda2/bin/STAR
+bwa=/home/lilin/miniconda2/bin/bwa
+samtools=/home/lilin/workdir/git/samtools-1.4/samtools
+tophat2=/home/lilin/miniconda2/bin/tophat
+stringtie=/home/lilin/miniconda2/bin/stringtie
+bowtie2=/home/lilin/miniconda2/bin/bowtie2
+bamToFastq=/home/lilin/miniconda2/bin/bamToFastq
+hisat2-build=/home/lilin/miniconda2/bin/hisat2-build
+
+
+# detection tools 
+KNIFE=/home/lilin/workdir/git/KNIFE-1.4/circularRNApipeline_Standalone/
+find_circ=/home/lilin/workdir/git/find_circ
+acfs=/home/lilin/workdir/git/acfs/ACF_MAKE.pl
+ciri=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_v2.0.6/CIRI2.pl
+CIRCexplorer2=/home/lilin/miniconda2/bin/CIRCexplorer2
+circRNA_finder=/home/lilin/workdir/git/circRNA_finder
+MAPSPLICE_DIR=/home/lilin/miniconda2/envs/metawrap-env/bin/
+DCC=/home/lilin/miniconda2/bin/DCC
+
+# abundance and transcripts
+ciri_as=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_AS_v1.2/CIRI_AS_v1.2.pl
+sailfish_cir=/home/lilin/workdir/git/sailfish-cir/sailfish_cir.py
+
+# others
+REF=/home/lilin/workdir/reference/gatk4/hg19_ref/annotation/hg19_gene.txt
+put_together_ws=/home/lilin/workdir/data/circRNA/put_together_ws.pl
+mosdepth=/home/lilin/miniconda2/bin/mosdepth
+
+acfs_config=/home/lilin/workdir/git/acfs/acfs_hg19.txt
+
+# annotation: for CIRCexplorer2  # give the polyA RNA-seq tophat result directions
+polyA_tophat=/home/lilin/workdir/data/circRNA/data/polyA/SRR8083958_tophat/

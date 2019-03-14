@@ -24,8 +24,15 @@
 # dataset and reference
 
 sample=$1
-dir=/home/lilin/workdir/data/circRNA/data
+dir=$3
 threads=$2
+
+echo "the sample is:" $sample
+
+echo "the threads numbers is:" $threads 
+
+echo "the work direction is:" $dir
+
 # fastq=/home/lilin/workdir/data/circRNA/data
 #### sample_1.fastq
 #### sample_2.fastq
@@ -35,34 +42,6 @@ threads=$2
 # KNIFE bowtie and bowtie2
 # find_circ bowtie2
 # acfs CIRI CIRCexplorer2 circRNA_finder mapsplice
-KNIFE=/home/lilin/workdir/git/KNIFE-1.4/circularRNApipeline_Standalone/
-find_circ=/home/lilin/workdir/git/find_circ
-acfs=/home/lilin/workdir/git/acfs/ACF_MAKE.pl
-ciri=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_v2.0.6/CIRI2.pl
-CIRCexplorer=/home/lilin/workdir/git/CIRCexplorer/
-circRNA_finder=/home/lilin/workdir/git/circRNA_finder
-MAPSPLICE_DIR=/home/lilin/miniconda2/envs/metawrap-env/bin/
-hisat2=/home/lilin/miniconda2/bin/hisat2
-samtools=/home/lilin/workdir/git/samtools-1.4/samtools
-tophat2=/home/lilin/miniconda2/bin/tophat
-bowtie2=/home/lilin/miniconda2/bin/bowtie2
-bamToFastq=/home/lilin/miniconda2/bin/bamToFastq
-
-# reference
-bowtie1=/home/lilin/workdir/reference/gatk4/hg19_ref/bowtie1/ucsc.hg19
-bowtie2_ref=/home/lilin/workdir/reference/gatk4/hg19_ref/bowtie2/ucsc.hg19
-fasta=/home/lilin/workdir/reference/gatk4/hg19_ref/bowtie2/ucsc.hg19.fa
-acfs_config=/home/lilin/workdir/git/acfs/acfs_hg19.txt
-genome=/home/lilin/workdir/reference/gatk4/hg19_ref/ucsc.hg19.fasta
-GTF=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_genes.gtf
-STAR=/home/lilin/workdir/reference/gatk4/hg19_ref/STAR/
-mapsplice_genome=/home/lilin/workdir/reference/gatk4/hg19_ref/mapsplice/
-mapsplice_index=/home/lilin/workdir/reference/gatk4/hg19_ref/mapsplice/total
-hisat2_reference=/home/lilin/workdir/reference/gatk4/hg19_ref/hisat2/hg19/genome
-
-gene_annotation_hg19="/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_ens.txt"
-hisat2_head_hg19="/home/lilin/workdir/data/circRNA/data/hisat2.sam"
-
 
 ## 1. KNIFE version: 1.4, URL: https://github.com/lindaszabo/KNIFE
 #bowtie-1.1.2
@@ -86,14 +65,14 @@ cd $dir/${sample}
 echo "find_circ begin" && echo ${sample} && date
 awk '{i++; if(NR%4==1) print "@"i; else{print }}' ./${sample}_1.fastq > ${sample}_1.fq
 awk '{i++; if(NR%4==1) print "@"i; else{print }}' ./${sample}_2.fastq > ${sample}_2.fq
-time $bowtie2 -p $threads --very-sensitive --phred33 --mm -M20 --score-min=C,-15,0 -x $bowtie2_ref -q -1 ./${sample}_1.fq -2 ./${sample}_2.fq > ${sample}.bowtie2.sam 2> bowtie2.log
+time $bowtie2 -p $threads --very-sensitive --phred33 --mm -M20 --score-min=C,-15,0 -x $bowtie2_index -q -1 ./${sample}_1.fq -2 ./${sample}_2.fq > ${sample}.bowtie2.sam 2> bowtie2.log
 time $samtools sort -@ $threads -o ${sample}.bowtie2.bam ${sample}.bowtie2.sam
 samtools view -hf 4 ${sample}.bowtie2.bam | samtools view -Sb - > ${sample}_unmapped_bowtie2.bam
 time $find_circ/unmapped2anchors.py ${sample}_unmapped_bowtie2.bam > ${sample}_anchor.fastq
 if [ ! -d ${sample}_find_circ ];then
         mkdir ${sample}_find_circ
 fi
-time $bowtie2 -p $threads --reorder --mm -M 20 --score-min=C,-15,0 -q -x $bowtie2_ref -U ${sample}_anchor.fastq 2> $sample.bt2_second.log | $find_circ/find_circ.py -G $genome -p $sample -s ./$sample""_find_circ/$sample.sites.log > ./$sample""_find_circ/$sample.sites.bed 2> ./$sample""_find_circ/$sample.sites.reads
+time $bowtie2 -p $threads --reorder --mm -M 20 --score-min=C,-15,0 -q -x $bowtie2_index -U ${sample}_anchor.fastq 2> $sample.bt2_second.log | $find_circ/find_circ.py -G $genome -p $sample -s ./$sample""_find_circ/$sample.sites.log > ./$sample""_find_circ/$sample.sites.bed 2> ./$sample""_find_circ/$sample.sites.reads
 rm ${sample}_1.fq
 rm ${sample}_2.fq
 rm ${sample}_anchor.fastq
@@ -172,7 +151,7 @@ echo "ciri done" && echo ${sample} && date
 ## 5. circexplorer version: 1.1.5, URL: https://github.com/YangLab/CIRCexplorer
 cd $dir/${sample}
 echo "circexplorer begin" && echo ${sample} && date
-time STAR --genomeDir $STAR --readFilesIn ./${sample}_1.fastq ./${sample}_2.fastq --runThreadN $threads --chimSegmentMin 20 --chimScoreMin 1 --alignIntronMax 100000 --outFilterMismatchNmax 4 --alignTranscriptsPerReadNmax 100000 --outFilterMultimapNmax 2 --outFileNamePrefix ./$sample --outSAMtype BAM Unsorted
+time $STAR --genomeDir $STAR_index --readFilesIn ./${sample}_1.fastq ./${sample}_2.fastq --runThreadN $threads --chimSegmentMin 20 --chimScoreMin 1 --alignIntronMax 100000 --outFilterMismatchNmax 4 --alignTranscriptsPerReadNmax 100000 --outFilterMultimapNmax 2 --outFileNamePrefix ./$sample --outSAMtype BAM Unsorted
 cd ./
 if [ ! -d ${sample}_CIRCexplorer ];then
         mkdir ${sample}_CIRCexplorer
@@ -192,11 +171,11 @@ echo "circExplorer2 begin" && echo ${sample} && date
 
 cd $dir/${sample}
 echo "tophat2 begin" && echo ${sample} && date
-time $tophat2 -a 6 --microexon-search -m 2 -p $threads -G $GTF -o ${sample}_tophat $bowtie2_ref ../${sample}_1.fastq ../${sample}_2.fastq
+time $tophat2 -a 6 --microexon-search -m 2 -p $threads -G $GTF -o ${sample}_tophat $bowtie2_index ../${sample}_1.fastq ../${sample}_2.fastq
 time $samtools view ${sample}_tophat/unmapped.bam > ${sample}_tophat/unmapped.sam
 cd ${sample}_tophat
 time $bamToFastq -i ./unmapped.bam -fq ./unmapped.fastq
-time "/home/lilin/workdir/git/tophat-2.1.0.Linux_x86_64/tophat2" -o tophat_fusion -p $threads --fusion-search --keep-fasta-order --bowtie1 --no-coverage-search $bowtie1 ./unmapped.fastq
+time "/home/lilin/workdir/git/tophat-2.1.0.Linux_x86_64/tophat2" -o tophat_fusion -p $threads --fusion-search --keep-fasta-order --bowtie2_index --no-coverage-search $bowtie1_index ./unmapped.fastq
 echo "tophat2 end" && echo ${sample} && date
 
 ## 5. CIRCexplorer2 version: 2 https://github.com/YangLab/CIRCexplorer2.git
@@ -211,7 +190,7 @@ echo "circExplorer2 done" && echo ${sample} && date
 ## 6. circRNA_finder version: 1.1.5, URL: https://github.com/orzechoj/circRNA_finder.git
 cd $dir/${sample}
 echo "circRNA_finder begin" && echo ${sample} && date
-time STAR --genomeDir $STAR --readFilesIn ./${sample}_1.fastq ./${sample}_2.fastq --runThreadN $threads --chimSegmentMin 20 --chimScoreMin 1 --alignIntronMax 100000 --outFilterMismatchNmax 4 --alignTranscriptsPerReadNmax 100000 --outFilterMultimapNmax 2 --outFileNamePrefix ./$sample --outSAMtype BAM Unsorted
+time $STAR --genomeDir $STAR_index --readFilesIn ./${sample}_1.fastq ./${sample}_2.fastq --runThreadN $threads --chimSegmentMin 20 --chimScoreMin 1 --alignIntronMax 100000 --outFilterMismatchNmax 4 --alignTranscriptsPerReadNmax 100000 --outFilterMultimapNmax 2 --outFileNamePrefix ./$sample --outSAMtype BAM Unsorted
 if [ ! -d ${sample}_circRNA_finder ];then
         mkdir ${sample}_circRNA_finder
 fi
@@ -253,15 +232,15 @@ echo "DCC begin" && echo ${sample} && date
 
 cd ${sample}_DCC
 
-time STAR --runThreadN $threads --genomeDir $STAR --outSAMtype BAM SortedByCoordinate --readFilesIn $dir/${sample}_1.fastq $dir/${sample}_2.fastq --outFileNamePrefix ${sample}_DCC --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
+time $STAR --runThreadN $threads --genomeDir $STAR_index --outSAMtype BAM SortedByCoordinate --readFilesIn $dir/${sample}_1.fastq $dir/${sample}_2.fastq --outFileNamePrefix ${sample}_DCC --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
 
 gzip ${sample}_DCCUnmapped.out.mate1
 mv ${sample}_DCCUnmapped.out.mate1.gz Unmapped_out_mate1.fastq.gz
-time STAR --readFilesCommand zcat --runThreadN $threads --genomeDir $STAR --outSAMtype BAM SortedByCoordinate --readFilesIn Unmapped_out_mate1.fastq.gz --outFileNamePrefix ${sample}.mate1. --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
+time $STAR --readFilesCommand zcat --runThreadN $threads --genomeDir $STAR_index --outSAMtype BAM SortedByCoordinate --readFilesIn Unmapped_out_mate1.fastq.gz --outFileNamePrefix ${sample}.mate1. --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
 
 gzip ${sample}_DCCUnmapped.out.mate2
 mv ${sample}_DCCUnmapped.out.mate2.gz Unmapped_out_mate2.fastq.gz
-time STAR --readFilesCommand zcat --runThreadN $threads --genomeDir $STAR --outSAMtype BAM SortedByCoordinate --readFilesIn Unmapped_out_mate2.fastq.gz --outFileNamePrefix ${sample}.mate2. --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
+time $STAR --readFilesCommand zcat --runThreadN $threads --genomeDir $STAR_index --outSAMtype BAM SortedByCoordinate --readFilesIn Unmapped_out_mate2.fastq.gz --outFileNamePrefix ${sample}.mate2. --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
 
 echo "DCC done" && echo ${sample} && date
 

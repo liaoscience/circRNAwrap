@@ -12,21 +12,12 @@
 #add the samples
 sample=$1
 threads=$2
-dir=/home/lilin/workdir/data/circRNA/data
+dir=$3
 cd $dir/${sample}
 
-#software
-put_together_ws="/home/lilin/workdir/data/circRNA/put_together_ws.pl"
-bedtools=/home/lilin/miniconda2/bin/bedtools
-hisat2=/home/lilin/miniconda2/bin/hisat2
-hisat2-build=/home/lilin/miniconda2/bin/hisat2-build
-samtools="/home/lilin/workdir/git/samtools-1.4/samtools"
-mosdepth=/home/lilin/miniconda2/bin/mosdepth
 
-#reference
-reference=/home/lilin/workdir/reference/gatk4/hg19_ref/annotation
-genome=/home/lilin/workdir/reference/gatk4/hg19_ref/ucsc.hg19.fasta
-GTF=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_genes.gtf
+#annotation_dir
+annotation_dir=/home/lilin/workdir/reference/gatk4/hg19_ref/annotation
 
 # 1 merge all tools output
 
@@ -86,14 +77,14 @@ cd ./circRNA_validate
 # short circRNA
 awk '{if($3-$2<=125) print }' ${sample}.circ.bed > short125.bed
 #reference 
-fastaFromBed -fi $reference -bed short125.bed -fo circRNA_short.fa -s
+fastaFromBed -fi $genome -bed short125.bed -fo circRNA_short.fa -s
 #repeat quadrupling
 paste circRNA_short.fa circRNA_short.fa circRNA_short.fa circRNA_short.fa > short.fa
 
 # long circRNA
 awk '{if($3-$2>125) print }' ${sample}.circ.bed > long125.bed
 #reference
-fastaFromBed -fi $reference -bed long125.bed -fo circRNA_long.fa -s
+fastaFromBed -fi $genome -bed long125.bed -fo circRNA_long.fa -s
 #repeat twice
 paste circRNA_long.fa circRNA_long.fa > long.fa
 cat long.fa short.fa > total.fa
@@ -214,7 +205,7 @@ cd $dir/${sample}
 
 #annotation
 # get circRNA inner exon sequence
-closestBed -s -a ${sample}.circ.bed -b $anno/gencode.v19.annotation.refflat.gtf -d | awk '{ if($NF==0) print }' > tmp.1  # circ and exon same as acfs gtf file, inner exon of circRNAs
+closestBed -s -a ${sample}.circ.bed -b $annotation_dir/gencode.v19.annotation.refflat.gtf -d | awk '{ if($NF==0) print }' > tmp.1  # circ and exon same as acfs gtf file, inner exon of circRNAs
 awk '{print $7"\t"$10"\t"$11"\t"$15"\t"$12"\t"$13}' tmp.1 | awk '{$2=$2; print }' | sed 's/ /\t/g' > tmp.2 #circ related exon
 fastaFromBed -name $4 -s -tab -fi $genome -bed tmp.2 -fo tmp.3 #circ related exon fasta
 awk -F '[\t\(]' 'NR==FNR{a[$1]=$0;next}NR>FNR{if($16 in a)print $0"\t"a[$16]}' tmp.3 tmp.1 | sort -n -k17 > tmp.4 #match the exon to related circ acording to the transcript and exon name
@@ -233,7 +224,7 @@ awk 'BEGIN{n=10}{for(i=1;i<n;i++)printf $i"\t";print $i}' ${sample}.circ_candida
 #add the utr information
 bedtools sort -i tmp.2 > tmp1.2
 mv tmp1.2 tmp.2
-closestBed -s -a tmp.2 -b $anno/utr.bed -d | awk '{ if($NF==0) print }' | sed 's/NM_/NM/g' > tmp.utr_in_exon # circRNA related exon which located in utr region
+closestBed -s -a tmp.2 -b $annotation_dir/utr.bed -d | awk '{ if($NF==0) print }' | sed 's/NM_/NM/g' > tmp.utr_in_exon # circRNA related exon which located in utr region
 sed 's/___/\t/g' tmp.utr_in_exon | awk '{if($4==$17) print }' | awk '!a[$4"\t"$5]++' > tmp.utr_in_exon1
 awk 'NR==FNR{a[$4]=$0;next}NR>FNR{if($7 in a)print $0"\t"a[$7]}' tmp.utr_in_exon1 tmp.anno | awk '{if($2 < $20 && $3 < $20 ) next; if($2 > $21 && $3 > $21 ) next; print }' > tmp.utr.anno #utr contain circRNAs
 awk '{if($2 > $20 && $3 < $21) print }' tmp.utr.anno > ${sample}.tmp.circ_in_utr # only in utr region
@@ -243,11 +234,11 @@ awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' ${sample}.tmp.circ_in_utr 
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' tmp.1 ${sample}.circ.bed > tmp.not_in_exon.bed 
 bedtools sort -i tmp.not_in_exon.bed > tmp.not_in_exon.bed1
 mv tmp.not_in_exon.bed1 tmp.not_in_exon.bed
-closestBed -s -a tmp.not_in_exon.bed -b $anno/gencode.v19.annotation.transcript.bed -d | awk '{ if($NF==0) print }' | awk '!a[$4]++' > ${sample}.tmp.circ_in_intron
+closestBed -s -a tmp.not_in_exon.bed -b $annotation_dir/gencode.v19.annotation.transcript.bed -d | awk '{ if($NF==0) print }' | awk '!a[$4]++' > ${sample}.tmp.circ_in_intron
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' ${sample}.tmp.circ_in_intron tmp.not_in_exon.bed > tmp.circ_not_intron
 bedtools sort -i tmp.circ_not_intron > tmp.circ_not_intron1
 mv tmp.circ_not_intron1 tmp.circ_not_intron
-closestBed -S -a tmp.circ_not_intron -b $anno/gencode.v19.annotation.transcript.bed -d | awk '{ if($NF==0) print }' > ${sample}.circ_in_antisense 
+closestBed -S -a tmp.circ_not_intron -b $annotation_dir/gencode.v19.annotation.transcript.bed -d | awk '{ if($NF==0) print }' > ${sample}.circ_in_antisense 
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' ${sample}.circ_in_antisense tmp.circ_not_intron > ${sample}.tmp.circ_in_intergenic
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' tmp.utr.anno tmp.anno > ${sample}.tmp.only_exon.bed
 
@@ -283,14 +274,14 @@ awk -F '[ \t]' 'NR==FNR{a[$1]=$0;next}NR>FNR{if($4 in a)print $0}' pair_proper.c
 #compare with intron, extract the intron bed format
 #awk '{ n9 = split($9, t9, ",");n10 = split($10, t10, ","); for (i = 0; ++i < n9-1;) { print $2"\t"t10[i]"\t"t9[i + 1]"\t"i "I@" $1"\t"$8"\t"$3 }}' gencode.v24.all.refFlat.txt > gencode.v24.all.refFlat.intron.bed
 #awk '{ if($8==1) print $2"\t"$4"\t"$5"\t"$1"\t"$8"\t"$3}' gencode.v24.all.refFlat.txt > gencode.v24.all.refFlat.single.bed
-$bedtools intersect -wa -wb -b $reference/gencode.v19.annotation.intron.bed -a pair_proper.circ_splice.intro > pair_proper_tmp.circ_splice.in_intron  #overlap with intron
+$bedtools intersect -wa -wb -b $annotation_dir/gencode.v19.annotation.intron.bed -a pair_proper.circ_splice.intro > pair_proper_tmp.circ_splice.in_intron  #overlap with intron
 awk '{if($2==$8 && $3==$9) print }' pair_proper_tmp.circ_splice.in_intron > pair_proper_tmp.circ_splice.in_intron_match
 awk 'ARGIND==1{a[$1"\t"$2"\t"$3"\t"$4]}ARGIND>1&&!($1"\t"$2"\t"$3"\t"$4 in a ){print $0}' pair_proper_tmp.circ_splice.in_intron_match pair_proper_tmp.circ_splice.in_intron > pair_proper_tmp.circ_splice.in_intron_mis
 awk 'ARGIND==1{a[$1"\t"$2"\t"$3"\t"$4]}ARGIND>1&&!($1"\t"$2"\t"$3"\t"$4 in a ){print $0}' pair_proper_tmp.circ_splice.in_intron pair_proper.circ_splice.intro > pair_proper_tmp.circ_splice.in_not_intron # not overlap with intron
 awk '!a[$4]++' pair_proper_tmp.circ_splice.in_intron_mis > pair_proper.circ_splice.in_intron_mis
 #not in intron region
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' pair_proper_tmp.circ_splice.in_intron pair_proper.circ_splice.intro > pair_proper_tmp.circ_splice.in_out
-$bedtools intersect -wa -wb -b $reference/gencode.v19.annotation.single.bed -a pair_proper_tmp.circ_splice.in_out > pair_proper.circ_splice.in_single
+$bedtools intersect -wa -wb -b $annotation_dir/gencode.v19.annotation.single.bed -a pair_proper_tmp.circ_splice.in_out > pair_proper.circ_splice.in_single
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' pair_proper.circ_splice.in_single pair_proper_tmp.circ_splice.in_out > pair_proper.circ_splice.intergenic
 
 #extract some discordant alignments
@@ -311,13 +302,13 @@ awk '{a[$1"\t"$2"\t"$3"\t"$4]++}END{for(i in a){print i"\t"a[i] | "sort -k 1"}}'
 #comapre the support with circRNA other end.
 awk 'ARGIND==1{a[$1"\t"$2"\t"$3"\t"$4]=$0}ARGIND>1&&($1"\t"$2"\t"$3"\t"$4 in a ){print $0"\t"a[$1"\t"$2"\t"$3"\t"$4]}' ${sample}.validate.circ.match pair_proper.circ_splice.intro > pair_proper_tmp.circ_splice.paired_support #different
 #compare with intron
-$bedtools intersect -wa -wb -b $reference/gencode.v19.annotation.intron.bed -a ${sample}.validate.circ.match > ${sample}.validate.circ.match_intron
+$bedtools intersect -wa -wb -b $annotation_dir/gencode.v19.annotation.intron.bed -a ${sample}.validate.circ.match > ${sample}.validate.circ.match_intron
 awk '{if($2==$8 && $3==$9) print }' ${sample}.validate.circ.match_intron > ${sample}.validate.circ.match_intron_match
 awk 'ARGIND==1{a[$1"\t"$2"\t"$3"\t"$4]}ARGIND>1&&!($1"\t"$2"\t"$3"\t"$4 in a ){print $0}' ${sample}.validate.circ.match_intron_match ${sample}.validate.circ.match_intron > ${sample}.validate.circ.match_intron_mis
 awk '!a[$4]++' ${sample}.validate.circ.match_intron_mis | wc -l
 awk '{if($2==$8 || $3==$9) print }' pair_proper_tmp.circ_splice.in_intron_mis | awk '!a[$4]++' | wc -l
 #not in intron region
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' ${sample}.validate.circ.match_intron ${sample}.validate.circ.match > ${sample}.validate.circ.match.in_out
-$bedtools intersect -wa -wb -b $reference/gencode.v19.annotation.single.bed -a ${sample}.validate.circ.match.in_out > ${sample}.validate.circ.match.in_single
+$bedtools intersect -wa -wb -b $annotation_dir/gencode.v19.annotation.single.bed -a ${sample}.validate.circ.match.in_out > ${sample}.validate.circ.match.in_single
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' ${sample}.validate.circ.match.in_single ${sample}.validate.circ.match.in_out > ${sample}.validate.circ.match.in_intergenic
 rm *tmp*
