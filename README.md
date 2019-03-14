@@ -11,7 +11,12 @@ Contains the following files:
 - circRNAwrap_align_detections.bash
 - circRNAwrap_transcript_abundance.bash
 
-test on 8 circRNA detection tools, users could add more tools if necessary
+examples of this pipeline
+- circRNAwrap_quick_pipeline.bash
+- circRNAwrap_full_pipeline.bash
+
+
+include 8 circRNA detection tools, users could add more tools if necessary
  - KNIFE
  - find_circ
  - CIRI2
@@ -21,12 +26,12 @@ test on 8 circRNA detection tools, users could add more tools if necessary
  - circRNA_finder
  - DCC
 
-circRNA sequence prediction
+include 3 circRNA sequence prediction tools
  - RAISE
  - CIRI-as
  - CIRCexplorer2
  
-circRNA abundance estimation
+include 1 circRNA abundance estimation tool
  - sailfish-cir
 
 expanded apply
@@ -48,15 +53,23 @@ These scripts have been tested on various Linux distributions. Before they can b
  - github
 
 
-To run the scripts to identify circular RNAs, first run hisat2 and STAR, once for each data set:
+before run the scripts, firstly, prepare the index and annotation files. owning to that we applied several different tools for circRNA identification, so we have to inistall the tools, and prepare the index for each softwares.
 
-bash circRNAwrap_detections.bash
+the detail in index and annotation, which include tools install, index and annotation prepare  
+- index_and_annotation.txt
+ 
+ 
+
+To run the scripts to identify circular RNAs, just sub the shell script:
+
+bash circRNAwrap_align_detections.bash
 
 Next, run the post processing scripts:
 
-bash circRNAwrap_abundance_transcripts.bash
+bash circRNAwrap_transcript_abundance.bash
 
-For each library the following output files or directions are produced:
+
+For each library the following output files or directions are produced in full pipeline:
 
 folds:
 a) <lib_name>_KNIFE:                KNIFE output

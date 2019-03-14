@@ -1,17 +1,17 @@
-# circRNAwrap pipeline
+# circRNAwrap pipeline, for quick pipeline, we applied the CIRI and CIRI-AS for the circRNA analysis, owning to that CIRI are sensitive to detect circRNA candidates, and CIRI-AS are useful for circRNA transcript prediction. 
+
+genome=/home/lilin/workdir/reference/gatk4/hg19_ref/ucsc.hg19.fasta # should include bwa faidx file
+GTF=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_genes.gtf
+
+ciri=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_v2.0.6/CIRI2.pl
+ciri_as=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_AS_v1.2/CIRI_AS_v1.2.pl
+
+
 
 sample=$1
+dir=/home/lilin/workdir/data/circRNA/data
 
 # alignment, identification, transcript prediction, abundance estimation
-
-# software
-ciri_as="/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_AS_v1.2/CIRI_AS_v1.2.pl"
-ciri=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_v2.0.6/CIRI2.pl
-sailfish_cir="/home/lilin/workdir/git/sailfish-cir/sailfish_cir.py"
-# reference
-genome=/home/lilin/workdir/reference/gatk4/hg19_ref/ucsc.hg19.fasta  # include bwa faidx file
-GTF=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_genes.gtf  
-REF="/home/lilin/workdir/reference/gatk4/hg19_ref/annotation/hg19_gene.txt"
 
 cd $dir/${sample}
 # fastq are same length, not trimmed reads
