@@ -175,7 +175,7 @@ time $tophat2 -a 6 --microexon-search -m 2 -p $threads -G $GTF -o ${sample}_toph
 time $samtools view ${sample}_tophat/unmapped.bam > ${sample}_tophat/unmapped.sam
 cd ${sample}_tophat
 time $bamToFastq -i ./unmapped.bam -fq ./unmapped.fastq
-time "/home/lilin/workdir/git/tophat-2.1.0.Linux_x86_64/tophat2" -o tophat_fusion -p $threads --fusion-search --keep-fasta-order --bowtie2_index --no-coverage-search $bowtie1_index ./unmapped.fastq
+time $tophat_s -o tophat_fusion -p $threads --fusion-search --keep-fasta-order --bowtie2_index --no-coverage-search $bowtie1_index ./unmapped.fastq
 echo "tophat2 end" && echo ${sample} && date
 
 ## 5. CIRCexplorer2 version: 2 https://github.com/YangLab/CIRCexplorer2.git
