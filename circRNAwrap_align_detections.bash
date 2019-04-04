@@ -33,7 +33,7 @@ echo "the threads numbers is:" $threads
 
 echo "the work direction is:" $dir
 
-# fastq=/home/lilin/workdir/data/circRNA/data
+
 #### sample_1.fastq
 #### sample_2.fastq
 
