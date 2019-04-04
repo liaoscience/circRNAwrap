@@ -19,9 +19,9 @@
 # dataset and reference
 
 sample=$1
-dir=$3
 threads=$2
-# fastq=/home/lilin/workdir/data/circRNA/data
+dir=$3
+
 #### sample_1.fastq
 #### sample_2.fastq
 
