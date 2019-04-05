@@ -1,16 +1,16 @@
 ################# circRNAwrap config files
 ################# 
 
-# circRNAwrap direction
-circRNAwrap=/home/lilin/workdir/data/circRNA/data
+# circRNAwrap script direction
+circRNAwrap=/home/lilin/workdir/git/circRNAwrap_v3/
 
 
 
 # reference and index
 genome=/home/lilin/workdir/reference/gatk4/hg19_ref/ucsc.hg19.fasta
 mapsplice_genome=/home/lilin/workdir/reference/gatk4/hg19_ref/mapsplice/
-
 # should include bwa faidx file
+
 GTF=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_genes.gtf
 gene_annotation_hg19=/home/lilin/workdir/reference/gatk4/hg19_ref/hg19_ens.txt
 hisat2_head_hg19=/home/lilin/workdir/data/circRNA/data/hisat2.sam
@@ -34,7 +34,7 @@ tophat2=/home/lilin/miniconda2/bin/tophat
 stringtie=/home/lilin/miniconda2/bin/stringtie
 bowtie2=/home/lilin/miniconda2/bin/bowtie2
 bamToFastq=/home/lilin/miniconda2/bin/bamToFastq
-hisat2-build=/home/lilin/miniconda2/bin/hisat2-build
+hisat2_build=/home/lilin/miniconda2/bin/hisat2-build
 tophat_s=/home/lilin/workdir/git/tophat-2.1.0.Linux_x86_64/tophat2
 
 # detection tools 

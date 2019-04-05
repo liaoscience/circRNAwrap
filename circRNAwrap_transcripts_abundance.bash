@@ -18,9 +18,19 @@
 
 # dataset and reference
 
-sample=$1
-threads=$2
-dir=$3
+. $1/circRNAwrap.configs
+sample=$2
+threads=$3
+dir=$4
+echo "-------------options----------"
+echo "the config files direction is:  " $1
+echo "------------------------------"
+echo "the sample is:                  " $sample
+echo "------------------------------"
+echo "the threads numbers is:         " $threads 
+echo "------------------------------"
+echo "the work direction is:          " $dir
+echo "------------------------------"
 
 #### sample_1.fastq
 #### sample_2.fastq

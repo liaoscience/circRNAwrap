@@ -11,7 +11,6 @@
 # pipeline direction, configs file direction
 # software direction
 # before runing, give the configs files
-. $circRNAwrap/circRNAwrap.configs
 
 # circRNAwrap pipeline
 
@@ -19,15 +18,24 @@
 # usually, we combine the alignment and identification -> detection
 
 # full pipeline
+#### ./sample/
+#### sample_1.fastq
+#### sample_2.fastq
 
-bash $circRNAwrap/circRNAwrap_align_detections.bash sample threads dir
+
+
+dir=/home/lilin/workdir/data/circRNA/data/
+threads=2
+sample=head1000
+circRNAwrap=/home/lilin/workdir/git/circRNAwrap_v3/
+
+bash $circRNAwrap/circRNAwrap_align_detections.bash $sample $threads $dir
 
 # transcript prediction and abundance estimation -> estimation
 
-bash $circRNAwrap/circRNAwrap_transcripts_abundance.bash sample threads dir
+bash $circRNAwrap/circRNAwrap_transcripts_abundance.bash $sample $threads $dir
 
 
 # quick pipeline
 
-. $circRNAwrap/circRNAwrap.configs
-bash $circRNAwrap/circRNAwrap_quick_mode.bash sample threads dir
+bash $circRNAwrap/circRNAwrap_quick_mode.bash $circRNAwrap $sample $threads $dir
