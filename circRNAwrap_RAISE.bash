@@ -28,8 +28,8 @@ mkdir circRNA_validate
 ########################################################################### 1 several tools together
 
 #KNIFE 2
-awk '{if($5>=0.9 && /rev/) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6"\t"$8}' ./${sample}_KNIFE/combinedReports/${sample}_1__circJuncProbs.txt | awk -F '[:|\t]' '{print $1"\t"$3"\t"$5"\t"$1"_"$3"_"$5"\t"$12"\t"$7}' | sed '1d' | awk '{if($2>$3) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6; if($2<$3) print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' > ./circRNA_validate/${sample}.KNIFE.txt
-#awk '{if($4>0 && /rev/) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6"\t"$8}' ./combinedReports/naive${sample}_1_report.txt | awk -F '[:|\t]' '{print $1"\t"$3"\t"$5"\t"$1"_"$3"_"$5"\t"$8"\t"$7}' | sed '1d' | awk '{if($2>$3) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6; if($2<$3) print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' >> ./circRNA_validate/${sample}.KNIFE.txt
+awk '{if($5>=0.9 && /rev/) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6"\t"$8}' ./${sample}_KNIFE/circReads/combinedReports/${sample}_1__circJuncProbs.txt | awk -F '[:|\t]' '{print $1"\t"$3"\t"$5"\t"$1"_"$3"_"$5"\t"$12"\t"$7}' | sed '1d' | awk '{if($2>$3) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6; if($2<$3) print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' > ./circRNA_validate/${sample}.KNIFE.txt
+awk '{if($4>0 && /rev/) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6"\t"$8}' ./${sample}_KNIFE/circReads/combinedReports/naive${sample}_1_report.txt | awk -F '[:|\t]' '{print $1"\t"$3"\t"$5"\t"$1"_"$3"_"$5"\t"$8"\t"$7}' | sed '1d' | awk '{if($2>$3) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6; if($2<$3) print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' >> ./circRNA_validate/${sample}.KNIFE.txt
 sed -i '1i\chr\tstart\tend\tsample\tKNIFE\tstrand' ./circRNA_validate/${sample}.KNIFE.txt
 
 #find_circ 2

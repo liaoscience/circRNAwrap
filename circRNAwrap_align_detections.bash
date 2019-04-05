@@ -156,11 +156,12 @@ echo "ciri done" && echo ${sample} && date
 ## 5. circexplorer version: 1.1.5, URL: https://github.com/YangLab/CIRCexplorer
 cd $dir/${sample}
 echo "circexplorer begin" && echo ${sample} && date
-time $STAR --genomeDir $STAR_index --readFilesIn ./${sample}_1.fastq ./${sample}_2.fastq --runThreadN $threads --chimSegmentMin 20 --chimScoreMin 1 --alignIntronMax 100000 --outFilterMismatchNmax 4 --alignTranscriptsPerReadNmax 100000 --outFilterMultimapNmax 2 --outFileNamePrefix ./$sample --outSAMtype BAM Unsorted
 cd ./
 if [ ! -d ${sample}_CIRCexplorer ];then
         mkdir ${sample}_CIRCexplorer
 fi
+time $STAR --genomeDir $STAR_index --readFilesIn ./${sample}_1.fastq ./${sample}_2.fastq --runThreadN $threads --chimSegmentMin 20 --chimScoreMin 1 --alignIntronMax 100000 --outFilterMismatchNmax 4 --alignTranscriptsPerReadNmax 100000 --outFilterMultimapNmax 2 --outFileNamePrefix ./${sample} --outSAMtype BAM Unsorted
+
 time python $CIRCexplorer/circ/star_parse.py ${sample}Chimeric.out.junction ${sample}_CIRCexplorer/${sample}_junction.txt && \
 time python $CIRCexplorer/circ/CIRCexplorer.py -j ${sample}_CIRCexplorer/${sample}_junction.txt -g $genome -r $CIRCexplorer/test/data/ref.txt -o ${sample}_CIRCexplorer/${sample}
 echo "circexplorer done" && echo ${sample} && date
@@ -192,7 +193,8 @@ echo "circExplorer2 done" && echo ${sample} && date
 ## 6. circRNA_finder version: 1.1.5, URL: https://github.com/orzechoj/circRNA_finder.git
 cd $dir/${sample}
 echo "circRNA_finder begin" && echo ${sample} && date
-time $STAR --genomeDir $STAR_index --readFilesIn ./${sample}_1.fastq ./${sample}_2.fastq --runThreadN $threads --chimSegmentMin 20 --chimScoreMin 1 --alignIntronMax 100000 --outFilterMismatchNmax 4 --alignTranscriptsPerReadNmax 100000 --outFilterMultimapNmax 2 --outFileNamePrefix ./$sample --outSAMtype BAM Unsorted
+#time $STAR --genomeDir $STAR_index --readFilesIn ./${sample}_1.fastq ./${sample}_2.fastq --runThreadN $threads --chimSegmentMin 20 --chimScoreMin 1 --alignIntronMax 100000 --outFilterMismatchNmax 4 --alignTranscriptsPerReadNmax 100000 --outFilterMultimapNmax 2 --outFileNamePrefix ./$sample --outSAMtype BAM Unsorted
+
 if [ ! -d ${sample}_circRNA_finder ];then
         mkdir ${sample}_circRNA_finder
 fi
@@ -244,6 +246,15 @@ gzip ${sample}_DCCUnmapped.out.mate2
 mv ${sample}_DCCUnmapped.out.mate2.gz Unmapped_out_mate2.fastq.gz
 time $STAR --readFilesCommand zcat --runThreadN $threads --genomeDir $STAR_index --outSAMtype BAM SortedByCoordinate --readFilesIn Unmapped_out_mate2.fastq.gz --outFileNamePrefix ${sample}.mate2. --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
 
+
+echo $dir/${sample}/${sample}_DCC/${sample}_DCC.Aligned.sortedByCoord.out.bam > bam
+echo $dir/${sample}/${sample}_DCC/${sample}.mate1.Aligned.sortedByCoord.out.bam > mate1 
+echo $dir/${sample}/${sample}_DCC/${sample}.mate2.Aligned.sortedByCoord.out.bam > mate2
+echo $dir/${sample}/${sample}_DCC/${sample}_DCCChimeric.out.junction > samplesheet
+
+DCC -T 12 @samplesheet -mt1 @mate1 -mt2 @mate2 -F -D -R $REP -an $GTF -Pi -M -Nr 2 2 -fg -G -N -A $genome -B @bam
+
+
 echo "DCC done" && echo ${sample} && date
 
 
@@ -259,4 +270,10 @@ rm ${sample}.hisat2.sam &
 awk '{if($6~/\*/) print }' ${sample}.unmap.sam > ${sample}.unmapped.sam
 cat $hisat2_head_hg19 ${sample}.unmapped.sam > ${sample}.unmap.head.sam
 $samtools view -Sb ${sample}.unmap.head.sam > ${sample}.unmap.bam
+
+$stringtie -p $threads -G $GTF -B -l $sample -C -e -o ./$sample.gtf $sample.hisat2.bam
+sed '1d' ./t_data.ctab > tmp.2
+sed '1i\t_id\tchr\tstrand\tstart\tend\tt_name\tnum_exons\tlength\tgene_id\tgene_name\tcov\t'$sample'' tmp.2 > $sample.t_data
+rm tmp.2
+
 echo "hisat2 end" && echo ${sample} && date

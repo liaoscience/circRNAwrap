@@ -35,6 +35,8 @@ stringtie=/home/lilin/miniconda2/bin/stringtie
 bowtie2=/home/lilin/miniconda2/bin/bowtie2
 hisat2_build=/home/lilin/miniconda2/bin/hisat2-build
 tophat_s=/home/lilin/workdir/git/tophat-2.1.0.Linux_x86_64/tophat2
+bedtools=/home/lilin/miniconda2/bin/bedtools
+
 
 # detection tools 
 KNIFE=/home/lilin/workdir/git/KNIFE-1.4/circularRNApipeline_Standalone/
@@ -54,6 +56,7 @@ sailfish_cir=/home/lilin/workdir/git/sailfish-cir/sailfish_cir.py
 REF=/home/lilin/workdir/reference/gatk4/hg19_ref/annotation/hg19_gene.txt
 put_together_ws=/home/lilin/workdir/data/circRNA/put_together_ws.pl
 mosdepth=/home/lilin/miniconda2/bin/mosdepth
+REP=/home/lilin/workdir/reference/gatk4/hg19_ref/repeats/repeat1.gtf
 
 acfs_config=/home/lilin/workdir/git/acfs/acfs_hg19.txt
 
