@@ -33,7 +33,6 @@ samtools=/home/lilin/workdir/git/samtools-1.4/samtools
 tophat2=/home/lilin/miniconda2/bin/tophat
 stringtie=/home/lilin/miniconda2/bin/stringtie
 bowtie2=/home/lilin/miniconda2/bin/bowtie2
-bamToFastq=/home/lilin/miniconda2/bin/bamToFastq
 hisat2_build=/home/lilin/miniconda2/bin/hisat2-build
 tophat_s=/home/lilin/workdir/git/tophat-2.1.0.Linux_x86_64/tophat2
 

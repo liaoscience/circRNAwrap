@@ -25,11 +25,11 @@
 
 
 dir=/home/lilin/workdir/data/circRNA/data/
-threads=2
-sample=head1000
+threads=10
+sample=srr10
 circRNAwrap=/home/lilin/workdir/git/circRNAwrap_v3/
 
-bash $circRNAwrap/circRNAwrap_align_detections.bash $circRNAwrap $sample $threads $dir
+nohup bash $circRNAwrap/circRNAwrap_align_detections.bash $circRNAwrap $sample $threads $dir 1> test &
 
 # transcript prediction and abundance estimation -> estimation
 

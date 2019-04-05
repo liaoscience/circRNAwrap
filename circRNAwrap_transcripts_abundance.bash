@@ -43,7 +43,7 @@ cd $dir/${sample}
 echo "CIRI-AS begin" && echo ${sample} && date
 mkdir ${sample}_CIRI-AS
 #time fastq-dump --split-3 $sra/${sample}.sra
-time bwa mem -t 4 -T 19 $genome ./${sample}_1.fastq ./${sample}_2.fastq > ./${sample}.bwa.sam
+time $bwa mem -t 4 -T 19 $genome ./${sample}_1.fastq ./${sample}_2.fastq > ./${sample}.bwa.sam
 time perl $ciri -T 5 -I ./${sample}.bwa.sam -F $genome -A $GTF -G ./${sample}_CIRI-AS/${sample}.log -O ./${sample}_CIRI-AS/${sample}.CIRI.txt
 time perl $ciri_as -S ${sample}.bwa.sam -C ./${sample}_CIRI-AS/${sample}.CIRI.txt -O ./${sample}_CIRI-AS/${sample}.CIRI.sequence -F $genome -A $GTF
 rm ${sample}.bwa.sam
@@ -54,13 +54,15 @@ echo "CIRI-AS done" && echo ${sample} && date
 
 ## 2. RAISE
 echo "RAISE begin" && echo ${sample} && date
-
-time bash $circRNAwrap/circRNAwrap_RAISE.bash ${sample}
+cd $dir/${sample}
+time bash $circRNAwrap/circRNAwrap_RAISE.bash ${sample} ${threads} ${dir}
 
 echo "RAISE done" && echo ${sample} && date
 
 ## 3. CIRCexplorer2 version: 2 https://github.com/YangLab/CIRCexplorer2.git
-
+cd $dir/${sample}
+echo "circExplorer2 begin" && echo ${sample} && date
+cd ${sample}_tophat
 echo "circExplorer2 begin" && echo ${sample} && date
 #time $CIRCexplorer2 parse -t TopHat-Fusion tophat_fusion/accepted_hits.bam > CIRCexplorer2_parse.log
 #time $CIRCexplorer2 annotate -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed -o ${sample}.CIRCexplorer2.txt > CIRCexplorer2_annotate.log

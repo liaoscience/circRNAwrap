@@ -77,14 +77,14 @@ cd ./circRNA_validate
 # short circRNA
 awk '{if($3-$2<=125) print }' ${sample}.circ.bed > short125.bed
 #reference 
-fastaFromBed -fi $genome -bed short125.bed -fo circRNA_short.fa -s
+$bedtools getfasta -fi $genome -bed short125.bed -fo circRNA_short.fa -s
 #repeat quadrupling
 paste circRNA_short.fa circRNA_short.fa circRNA_short.fa circRNA_short.fa > short.fa
 
 # long circRNA
 awk '{if($3-$2>125) print }' ${sample}.circ.bed > long125.bed
 #reference
-fastaFromBed -fi $genome -bed long125.bed -fo circRNA_long.fa -s
+$bedtools getfasta -fi $genome -bed long125.bed -fo circRNA_long.fa -s
 #repeat twice
 paste circRNA_long.fa circRNA_long.fa > long.fa
 cat long.fa short.fa > total.fa
@@ -94,10 +94,10 @@ mv total.fa ./index/
 cd ./index/
 sed 's/\t>.*//g' total.fa | sed 's/\t//g' > total.repeat1.fa
 fold total.repeat1.fa > total.repeat.fa
-samtools faidx total.repeat.fa
+$samtools faidx total.repeat.fa
 rm total.repeat1.fa
 rm total.fa
-${hisat2-build} -p $threads total.repeat.fa total.repeat
+${hisat2_build} -p $threads total.repeat.fa total.repeat
 
 ########################################################################### 3 RAISE abundance
 cd $dir/${sample}
@@ -192,7 +192,7 @@ rm -r ./tmp
 cd $dir/${sample}
 awk -v sample="${sample}" 'BEGIN{print "circrna\t"sample"\tboth\tpp\tup"}NR==1{for(i=0;i++<NF;)a[$i]=i;next}{print $a["circrna"]"\t"$a[sample]"\t"$a["both"]"\t"$a["pp"]"\t"$a["up"]}' ${sample}.circ.txt > ${sample}.tmp.circ.txt
 cat ${sample}.tmp.circ.txt | sed 's/(-)/ nega/g' | sed 's/(+)/ posi/g' | awk -F '[ \t:-]' '{print $1,$2,$3,$0}' | sed 's/nega/-/g' | sed 's/posi/+/g' | sed 's/ /\t/g' | awk '{print $1"\t"$2"\t"$3"\t"$4"("$5")\t"$6"\t"$5}' | sed '1d' | sort -k 1,1 -k2,2n > ${sample}.circ1.bed
-sortBed -i ${sample}.circ1.bed > ${sample}.circ.bed
+$bedtools sort -i ${sample}.circ1.bed > ${sample}.circ.bed
 
 awk '{print $1,$2-1,$2+1,$4,"up",$6"\n"$1,$3-1,$3+1,$4,"down",$6 }' ${sample}.circ.bed | sed 's/ /\t/g' > ${sample}.tmp.2.circ.bed
 $mosdepth -t $threads --by ${sample}.tmp.2.circ.bed ${sample}.tmp.mos ${sample}.hisat2.rmdup.bam
@@ -205,9 +205,9 @@ cd $dir/${sample}
 
 #annotation
 # get circRNA inner exon sequence
-closestBed -s -a ${sample}.circ.bed -b $annotation_dir/gencode.v19.annotation.refflat.gtf -d | awk '{ if($NF==0) print }' > tmp.1  # circ and exon same as acfs gtf file, inner exon of circRNAs
+$bedtools closest -s -a ${sample}.circ.bed -b $annotation_dir/gencode.v19.annotation.refflat.gtf -d | awk '{ if($NF==0) print }' > tmp.1  # circ and exon same as acfs gtf file, inner exon of circRNAs
 awk '{print $7"\t"$10"\t"$11"\t"$15"\t"$12"\t"$13}' tmp.1 | awk '{$2=$2; print }' | sed 's/ /\t/g' > tmp.2 #circ related exon
-fastaFromBed -name $4 -s -tab -fi $genome -bed tmp.2 -fo tmp.3 #circ related exon fasta
+$bedtools getfasta -name $4 -s -tab -fi $genome -bed tmp.2 -fo tmp.3 #circ related exon fasta
 awk -F '[\t\(]' 'NR==FNR{a[$1]=$0;next}NR>FNR{if($16 in a)print $0"\t"a[$16]}' tmp.3 tmp.1 | sort -n -k17 > tmp.4 #match the exon to related circ acording to the transcript and exon name
 sed 's/___/\t/g' tmp.4 | awk -F "[@\t]" '{b[$1,$2,$3,$4,$5,$6,$14,$15]=b[$1,$2,$3,$4,$5,$6,$14,$15]$NF""; c[$1,$2,$3,$4,$5,$6,$14,$15]=c[$1,$2,$3,$4,$5,$6,$14,$15]$(NF-2)"___";}END{for(i in b){split(i,m,SUBSEP); len=length(b[i]); print ">"m[1]"\t"m[2]"\t"m[3]"\t"m[4]"\t"m[5]"\t"m[6]"\t"m[7]"\t"m[8]"\t"len"\t"c[i]"\t"b[i]}}' | sort -nr -k9 | awk '{if(($3-$2)>=$9) print }' | awk '!a[$4]++' > ${sample}.tmp.tab2 #circRNA related exon length  make sure each circRNA are output according this condition
 
@@ -222,9 +222,9 @@ sed 's/___/\t/g' tmp.4 | awk -F "[@\t]" '{b[$1,$2,$3,$4,$5,$6,$14,$15]=b[$1,$2,$
 awk 'BEGIN{n=10}{for(i=1;i<n;i++)printf $i"\t";print $i}' ${sample}.circ_candidates.tab | sed 's/>//g' > tmp.anno #circRNA related annotation
 
 #add the utr information
-bedtools sort -i tmp.2 > tmp1.2
+$bedtools sort -i tmp.2 > tmp1.2
 mv tmp1.2 tmp.2
-closestBed -s -a tmp.2 -b $annotation_dir/utr.bed -d | awk '{ if($NF==0) print }' | sed 's/NM_/NM/g' > tmp.utr_in_exon # circRNA related exon which located in utr region
+$bedtools closest -s -a tmp.2 -b $annotation_dir/utr.bed -d | awk '{ if($NF==0) print }' | sed 's/NM_/NM/g' > tmp.utr_in_exon # circRNA related exon which located in utr region
 sed 's/___/\t/g' tmp.utr_in_exon | awk '{if($4==$17) print }' | awk '!a[$4"\t"$5]++' > tmp.utr_in_exon1
 awk 'NR==FNR{a[$4]=$0;next}NR>FNR{if($7 in a)print $0"\t"a[$7]}' tmp.utr_in_exon1 tmp.anno | awk '{if($2 < $20 && $3 < $20 ) next; if($2 > $21 && $3 > $21 ) next; print }' > tmp.utr.anno #utr contain circRNAs
 awk '{if($2 > $20 && $3 < $21) print }' tmp.utr.anno > ${sample}.tmp.circ_in_utr # only in utr region
@@ -232,13 +232,13 @@ awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' ${sample}.tmp.circ_in_utr 
 
 #class 1, utr, 2, only exon, 3, not in exon (intron, intergenic, antisense)
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' tmp.1 ${sample}.circ.bed > tmp.not_in_exon.bed 
-bedtools sort -i tmp.not_in_exon.bed > tmp.not_in_exon.bed1
+$bedtools sort -i tmp.not_in_exon.bed > tmp.not_in_exon.bed1
 mv tmp.not_in_exon.bed1 tmp.not_in_exon.bed
-closestBed -s -a tmp.not_in_exon.bed -b $annotation_dir/gencode.v19.annotation.transcript.bed -d | awk '{ if($NF==0) print }' | awk '!a[$4]++' > ${sample}.tmp.circ_in_intron
+$bedtools closest -s -a tmp.not_in_exon.bed -b $annotation_dir/gencode.v19.annotation.transcript.bed -d | awk '{ if($NF==0) print }' | awk '!a[$4]++' > ${sample}.tmp.circ_in_intron
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' ${sample}.tmp.circ_in_intron tmp.not_in_exon.bed > tmp.circ_not_intron
-bedtools sort -i tmp.circ_not_intron > tmp.circ_not_intron1
+$bedtools sort -i tmp.circ_not_intron > tmp.circ_not_intron1
 mv tmp.circ_not_intron1 tmp.circ_not_intron
-closestBed -S -a tmp.circ_not_intron -b $annotation_dir/gencode.v19.annotation.transcript.bed -d | awk '{ if($NF==0) print }' > ${sample}.circ_in_antisense 
+$bedtools closest -S -a tmp.circ_not_intron -b $annotation_dir/gencode.v19.annotation.transcript.bed -d | awk '{ if($NF==0) print }' > ${sample}.circ_in_antisense 
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' ${sample}.circ_in_antisense tmp.circ_not_intron > ${sample}.tmp.circ_in_intergenic
 awk 'ARGIND==1{a[$4]}ARGIND>1&&!($4 in a ){print $0}' tmp.utr.anno tmp.anno > ${sample}.tmp.only_exon.bed
 

@@ -72,7 +72,7 @@ awk '{i++; if(NR%4==1) print "@"i; else{print }}' ./${sample}_1.fastq > ${sample
 awk '{i++; if(NR%4==1) print "@"i; else{print }}' ./${sample}_2.fastq > ${sample}_2.fq
 time $bowtie2 -p $threads --very-sensitive --phred33 --mm -M20 --score-min=C,-15,0 -x $bowtie2_index -q -1 ./${sample}_1.fq -2 ./${sample}_2.fq > ${sample}.bowtie2.sam 2> bowtie2.log
 time $samtools sort -@ $threads -o ${sample}.bowtie2.bam ${sample}.bowtie2.sam
-samtools view -hf 4 ${sample}.bowtie2.bam | samtools view -Sb - > ${sample}_unmapped_bowtie2.bam
+time $samtools view -hf 4 ${sample}.bowtie2.bam | samtools view -Sb - > ${sample}_unmapped_bowtie2.bam
 time $find_circ/unmapped2anchors.py ${sample}_unmapped_bowtie2.bam > ${sample}_anchor.fastq
 if [ ! -d ${sample}_find_circ ];then
         mkdir ${sample}_find_circ
@@ -86,7 +86,7 @@ echo "find_circ done" && echo ${sample} && date
 ## 3. acfs https://github.com/arthuryxt/acfs.git
 cd $dir/${sample}
 echo "acfs begin" && echo ${sample} && date
-$bamToFastq -i ${sample}_unmapped_bowtie2.bam -fq ${sample}_unmapped_bowtie2.fq
+$bedtools bamtofastq -i ${sample}_unmapped_bowtie2.bam -fq ${sample}_unmapped_bowtie2.fq
 if [ ! -d ${sample}_acfs ];then
         mkdir ${sample}_acfs
 fi
@@ -145,7 +145,7 @@ echo "acfs end" && echo ${sample} && date
 # 4, CIRI-full_v2 https://sourceforge.net/projects/ciri/files/CIRI2/
 cd $dir/${sample}/
 echo "ciri begin" && echo ${sample} && date
-time bwa mem -t $threads -T 19 $genome ./${sample}_1.fastq ./${sample}_2.fastq > ./${sample}.bwa.sam
+time $bwa mem -t $threads -T 19 $genome ./${sample}_1.fastq ./${sample}_2.fastq > ./${sample}.bwa.sam
 if [ ! -d ${sample}_CIRI ];then
         mkdir ${sample}_CIRI
 fi
@@ -165,10 +165,7 @@ time python $CIRCexplorer/circ/star_parse.py ${sample}Chimeric.out.junction ${sa
 time python $CIRCexplorer/circ/CIRCexplorer.py -j ${sample}_CIRCexplorer/${sample}_junction.txt -g $genome -r $CIRCexplorer/test/data/ref.txt -o ${sample}_CIRCexplorer/${sample}
 echo "circexplorer done" && echo ${sample} && date
 
-## 5. circexplorer version: 1.1.5, URL: https://github.com/YangLab/CIRCexplorer
-cd $dir/${sample}
 
-CIRCexplorer2=CIRCexplorer2
 ## circExplorer2 , URL: https://github.com/YangLab/CIRCexplorer2.git
 
 cd $dir/${sample}
@@ -176,10 +173,10 @@ echo "circExplorer2 begin" && echo ${sample} && date
 
 cd $dir/${sample}
 echo "tophat2 begin" && echo ${sample} && date
-time $tophat2 -a 6 --microexon-search -m 2 -p $threads -G $GTF -o ${sample}_tophat $bowtie2_index ../${sample}_1.fastq ../${sample}_2.fastq
+time $tophat2 -a 6 --microexon-search -m 2 -p $threads -G $GTF -o ${sample}_tophat $bowtie2_index ./${sample}_1.fastq ./${sample}_2.fastq
 time $samtools view ${sample}_tophat/unmapped.bam > ${sample}_tophat/unmapped.sam
 cd ${sample}_tophat
-time $bamToFastq -i ./unmapped.bam -fq ./unmapped.fastq
+time $bedtools bamtofastq -i ./unmapped.bam -fq ./unmapped.fastq
 time $tophat_s -o tophat_fusion -p $threads --fusion-search --keep-fasta-order --bowtie2_index --no-coverage-search $bowtie1_index ./unmapped.fastq
 echo "tophat2 end" && echo ${sample} && date
 
@@ -188,7 +185,7 @@ echo "circExplorer2 begin" && echo ${sample} && date
 time $CIRCexplorer2 parse -t TopHat-Fusion tophat_fusion/accepted_hits.bam > CIRCexplorer2_parse.log
 time $CIRCexplorer2 annotate -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed -o ${sample}.CIRCexplorer2.txt > CIRCexplorer2_annotate.log
 #time $CIRCexplorer2 assemble -p $threads -r $gene_annotation_hg19 -m ${sample}_tophat -o assemble > CIRCexplorer2_assemble.log
-#time $CIRCexplorer2 denovo -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed --abs abs --as as -m ../${sample}_tophat -d ../assemble -n $polyA_tophat -o denovo > CIRCexplorer2_denovo.log
+#time $CIRCexplorer2 denovo -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed --abs abs --as as -m ./${sample}_tophat -d ./assemble -n $polyA_tophat -o denovo > CIRCexplorer2_denovo.log
 echo "circExplorer2 done" && echo ${sample} && date
 
 
@@ -214,7 +211,7 @@ if [ ! -d ${sample}_mapsplice ];then
 fi
 OUTPUT_DIR=./${sample}_mapsplice
 READ_FILE_END1=./${sample}_unmapped_bowtie2.fq
-#READ_FILE_END2=../${sample}_2.fastq
+#READ_FILE_END2=./${sample}_2.fastq
 time python $MAPSPLICE_DIR/mapsplice.py \
        -1 $READ_FILE_END1 \
        -c $mapsplice_genome \
@@ -253,7 +250,7 @@ echo "DCC done" && echo ${sample} && date
 ## 9. linear RNA abundance
 cd $dir/${sample}
 echo "hisat2 begin" && echo ${sample} && date
-time $hisat2 -p $threads --mm --dta -x $hisat2_reference -1 ../${sample}_1.fastq -2 ../${sample}_2.fastq -S ${sample}.hisat2.sam 2> ${sample}.map.rate
+time $hisat2 -p $threads --mm --dta -x $hisat2_reference -1 ./${sample}_1.fastq -2 ./${sample}_2.fastq -S ${sample}.hisat2.sam 2> ${sample}.map.rate
 awk '{ if($2==77 || $2==141 || $2==89 || $2==133 || $2==137 || $2==69) print }' ${sample}.hisat2.sam > ${sample}.unmap.sam
 awk '{m=2; if($2==77 || $2==69) m=1; if($6~/\*/) print "@"$1"_"$2"_"m"\n"$10"\n\+\n"$11}' ${sample}.unmap.sam > ${sample}.unmap.fq
 $samtools sort -@ $threads -o ${sample}.hisat2.bam ${sample}.hisat2.sam
