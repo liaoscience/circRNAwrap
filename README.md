@@ -70,38 +70,35 @@ l) <lib_name>_sum:                  sum result
 
 ## example
 
-#### input the config file information
-. $circRNAwrap/circRNAwrap.configs
+# full pipeline
+#### ./sample/
+#### sample_1.fastq
+#### sample_2.fastq
+
+dir=/home/lilin/workdir/data/circRNA/data/
+threads=2
+sample=head1000
+circRNAwrap=/home/lilin/workdir/git/circRNAwrap_v3/
+
+bash $circRNAwrap/circRNAwrap_align_detections.bash $sample $threads $dir
+
+# transcript prediction and abundance estimation -> estimation
+
+bash $circRNAwrap/circRNAwrap_transcripts_abundance.bash $sample $threads $dir
 
 
-#### alignment, identification, transcript prediction, abundance estimation.  usually, we combine the alignment and identification -> detection
+# quick pipeline
 
-bash $circRNAwrap/circRNAwrap_align_detections.bash sample threads dir
-
-#### transcript prediction and abundance estimation -> estimation
-
-bash $circRNAwrap/circRNAwrap_transcripts_abundance.bash sample threads dir
-
-##### $1 is sample id, $2 is threads numbers $3 is the work direction
-
-
-#### full pipeline mode
-
-bash circRNAwrap_align_detections.bash $1 $2 $3
-bash circRNAwrap_transcripts_abundance.bash $1 $2 $3
-
-#### quick mode
-
-bash circRNAwrap_quick_mode.bash $1 $2 $3
+bash $circRNAwrap/circRNAwrap_quick_mode.bash $circRNAwrap $sample $threads $dir
 
 
 #### parallel run
-parallel -j 2 -q --xapply bash "$circRNAwrap"/circRNAwrap_transcripts_abundance.bash {1} 8 "$dir" ::: sample1 sample2 sample3
+parallel -j 2 -q --xapply bash "$circRNAwrap"/circRNAwrap_transcripts_abundance.bash "$circRNAwrap" {1} 8 "$dir" ::: sample1 sample2 sample3
 
-parallel -j 2 -q --xapply bash "$circRNAwrap"/circRNAwrap_align_detections.bash {1} 8 "$dir" ::: sample1 sample2 sample3
+parallel -j 2 -q --xapply bash "$circRNAwrap"/circRNAwrap_align_detections.bash "$circRNAwrap" {1} 8 "$dir" ::: sample1 sample2 sample3
 
 #### list of samples
-parallel -j 2 -q --xapply bash "$circRNAwrap"/circRNAwrap_transcripts_abundance.bash {1} 8 "$dir" :::: sample.txt
+parallel -j 2 -q --xapply bash "$circRNAwrap"/circRNAwrap_transcripts_abundance.bash "$circRNAwrap" {1} 8 "$dir" :::: sample.txt
 
 
 sample.txt: 
