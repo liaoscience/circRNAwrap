@@ -24,9 +24,9 @@
 
 
 
-dir=/home/lilin/workdir/data/circRNA/data/
+dir=/home/lilin/workdir/data/sra_circRNA/
 threads=10
-sample=srr10
+sample=SRR1049826
 circRNAwrap=/home/lilin/workdir/git/circRNAwrap_v3/
 
 nohup bash $circRNAwrap/circRNAwrap_align_detections.bash $circRNAwrap $sample $threads $dir 1> test &
