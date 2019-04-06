@@ -61,7 +61,9 @@ if [ ! -d ${sample}_KNIFE ];then
 fi
 cd $KNIFE
 echo "KNIFE begin" && echo ${sample} && date
-time bash completeRun.sh $dir/${sample}/ complete $dir/${sample}/ ${sample}_KNIFE 13 sam 2>&1 | tee $dir/${sample}/${sample}_KNIFE.log 
+time bash completeRun.sh $dir/${sample}/ complete $dir/${sample}/ ${sample}_KNIFE 13 sam 2>&1 | tee $dir/${sample}/${sample}_KNIFE.log
+cd $dir/${sample}
+rm -r ${sample}_KNIFESwapped
 echo "KNIFE done" && echo ${sample} && date
 
 
@@ -178,16 +180,27 @@ time $tophat2 -a 6 --microexon-search -m 2 -p $threads -G $GTF -o ${sample}_toph
 time $samtools view ${sample}_tophat/unmapped.bam > ${sample}_tophat/unmapped.sam
 cd ${sample}_tophat
 time $bedtools bamtofastq -i ./unmapped.bam -fq ./unmapped.fastq
-time $tophat_s -o tophat_fusion -p $threads --fusion-search --keep-fasta-order --bowtie2_index --no-coverage-search $bowtie1_index ./unmapped.fastq
+time $tophat_s -o tophat_fusion -p $threads --fusion-search --keep-fasta-order --bowtie1 --no-coverage-search $bowtie1_index ./unmapped.fastq
+
 echo "tophat2 end" && echo ${sample} && date
 
 ## 5. CIRCexplorer2 version: 2 https://github.com/YangLab/CIRCexplorer2.git
 echo "circExplorer2 begin" && echo ${sample} && date
 time $CIRCexplorer2 parse -t TopHat-Fusion tophat_fusion/accepted_hits.bam > CIRCexplorer2_parse.log
 time $CIRCexplorer2 annotate -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed -o ${sample}.CIRCexplorer2.txt > CIRCexplorer2_annotate.log
+cd $dir/${sample}
+if [ ! -d ${sample}_CIRCexplorer2 ];then
+        mkdir ${sample}_CIRCexplorer2
+fi
+cp ./${sample}_tophat/${sample}.CIRCexplorer2.txt ./${sample}_CIRCexplorer2/${sample}.CIRCexplorer2.txt
+cp ./${sample}_tophat/back_spliced_junction.bed ./${sample}_CIRCexplorer2/back_spliced_junction.bed
+cp ./${sample}_tophat/CIRCexplorer2_annotate.log ./${sample}_CIRCexplorer2/CIRCexplorer2_annotate.log
+
+
 #time $CIRCexplorer2 assemble -p $threads -r $gene_annotation_hg19 -m ${sample}_tophat -o assemble > CIRCexplorer2_assemble.log
 #time $CIRCexplorer2 denovo -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed --abs abs --as as -m ./${sample}_tophat -d ./assemble -n $polyA_tophat -o denovo > CIRCexplorer2_denovo.log
 echo "circExplorer2 done" && echo ${sample} && date
+
 
 
 ## 6. circRNA_finder version: 1.1.5, URL: https://github.com/orzechoj/circRNA_finder.git
@@ -228,7 +241,6 @@ source deactivate metawrap-env
 ## 8. DCC, URL: https://github.com/dieterich-lab/DCC.git
 
 cd $dir/${sample}
-rm -r ${sample}_DCC
 if [ ! -d ${sample}_DCC ];then
  mkdir ${sample}_DCC
 fi
@@ -236,7 +248,7 @@ echo "DCC begin" && echo ${sample} && date
 
 cd ${sample}_DCC
 
-time $STAR --runThreadN $threads --genomeDir $STAR_index --outSAMtype BAM SortedByCoordinate --readFilesIn $dir/${sample}_1.fastq $dir/${sample}_2.fastq --outFileNamePrefix ${sample}_DCC --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
+time $STAR --runThreadN $threads --genomeDir $STAR_index --outSAMtype BAM SortedByCoordinate --readFilesIn $dir/${sample}/${sample}_1.fastq $dir/${sample}/${sample}_2.fastq --outFileNamePrefix ${sample}_DCC --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
 
 gzip ${sample}_DCCUnmapped.out.mate1
 mv ${sample}_DCCUnmapped.out.mate1.gz Unmapped_out_mate1.fastq.gz
@@ -246,13 +258,13 @@ gzip ${sample}_DCCUnmapped.out.mate2
 mv ${sample}_DCCUnmapped.out.mate2.gz Unmapped_out_mate2.fastq.gz
 time $STAR --readFilesCommand zcat --runThreadN $threads --genomeDir $STAR_index --outSAMtype BAM SortedByCoordinate --readFilesIn Unmapped_out_mate2.fastq.gz --outFileNamePrefix ${sample}.mate2. --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
 
-
+# build the data file
 echo $dir/${sample}/${sample}_DCC/${sample}_DCC.Aligned.sortedByCoord.out.bam > bam
 echo $dir/${sample}/${sample}_DCC/${sample}.mate1.Aligned.sortedByCoord.out.bam > mate1 
 echo $dir/${sample}/${sample}_DCC/${sample}.mate2.Aligned.sortedByCoord.out.bam > mate2
 echo $dir/${sample}/${sample}_DCC/${sample}_DCCChimeric.out.junction > samplesheet
 
-DCC -T 12 @samplesheet -mt1 @mate1 -mt2 @mate2 -F -D -R $REP -an $GTF -Pi -M -Nr 2 2 -fg -G -N -A $genome -B @bam
+$DCC -T 12 @samplesheet -mt1 @mate1 -mt2 @mate2 -F -D -R $REP -an $GTF -Pi -M -Nr 2 2 -fg -G -N -A $genome -B @bam
 
 
 echo "DCC done" && echo ${sample} && date

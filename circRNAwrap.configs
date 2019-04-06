@@ -43,10 +43,11 @@ KNIFE=/home/lilin/workdir/git/KNIFE-1.4/circularRNApipeline_Standalone/
 find_circ=/home/lilin/workdir/git/find_circ
 acfs=/home/lilin/workdir/git/acfs/ACF_MAKE.pl
 ciri=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_v2.0.6/CIRI2.pl
+CIRCexplorer=/home/lilin/workdir/git/CIRCexplorer
 CIRCexplorer2=/home/lilin/miniconda2/bin/CIRCexplorer2
 circRNA_finder=/home/lilin/workdir/git/circRNA_finder
 MAPSPLICE_DIR=/home/lilin/miniconda2/envs/metawrap-env/bin/
-DCC=/home/lilin/miniconda2/bin/DCC
+DCC=/home/lilin/.local/bin/DCC
 
 # abundance and transcripts
 ciri_as=/home/lilin/workdir/git/CIRI-full_v2.0/bin/CIRI_AS_v1.2/CIRI_AS_v1.2.pl
