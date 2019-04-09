@@ -259,12 +259,17 @@ mv ${sample}_DCCUnmapped.out.mate2.gz Unmapped_out_mate2.fastq.gz
 time $STAR --readFilesCommand zcat --runThreadN $threads --genomeDir $STAR_index --outSAMtype BAM SortedByCoordinate --readFilesIn Unmapped_out_mate2.fastq.gz --outFileNamePrefix ${sample}.mate2. --quantMode GeneCounts --genomeLoad NoSharedMemory --outReadsUnmapped Fastx --outSJfilterOverhangMin 15 15 15 15 --alignSJoverhangMin 15 --alignSJDBoverhangMin 10 --outFilterMultimapNmax 20 --outFilterScoreMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.05 --outFilterMatchNminOverLread 0.7 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 15 --chimScoreMin 15 --chimScoreSeparation 10 --chimJunctionOverhangMin 15 --twopassMode Basic --alignSoftClipAtReferenceEnds No --outSAMattributes NH HI AS nM NM MD jM jI XS --sjdbGTFfile $GTF
 
 # build the data file
+
+$samtools index ${dir}${sample}/${sample}_DCC/${sample}_DCCAligned.sortedByCoord.out.bam
+$samtools index ${dir}${sample}/${sample}_DCC/${sample}.mate1.Aligned.sortedByCoord.out.bam
+$samtools index ${dir}${sample}/${sample}_DCC/${sample}.mate2.Aligned.sortedByCoord.out.bam
+
 echo ${dir}${sample}/${sample}_DCC/${sample}_DCCAligned.sortedByCoord.out.bam > bam
 echo ${dir}${sample}/${sample}_DCC/${sample}.mate1.Chimeric.out.junction > mate1 
 echo ${dir}${sample}/${sample}_DCC/${sample}.mate2.Chimeric.out.junction > mate2
 echo ${dir}${sample}/${sample}_DCC/${sample}_DCCChimeric.out.junction > samplesheet
 
-$DCC -T 12 @samplesheet -mt1 @mate1 -mt2 @mate2 -F -D -R $REP -an $GTF -Pi -M -Nr 2 2 -fg -G -N -A $genome -B @bam
+$DCC -T 12 @samplesheet -mt1 @mate1 -mt2 @mate2 -F -D -R $REP -an $GTF -Pi -M -Nr 2 1 -fg -G -N -A $genome -B @bam
 
 echo "DCC done" && echo ${sample} && date
 
