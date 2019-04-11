@@ -35,6 +35,11 @@ echo "------------------------------"
 #### sample_1.fastq
 #### sample_2.fastq
 
+## 2. RAISE
+echo "RAISE begin" && echo ${sample} && date
+cd $dir/${sample}
+time bash $circRNAwrap/circRNAwrap_RAISE.bash $1 ${sample} ${threads} ${dir}
+
 
 ## 1. CIRI-AS version: 1.2, URL: https://sourceforge.net/projects/ciri/files/CIRI-AS/
 cd $dir/${sample}
@@ -52,21 +57,18 @@ rm ${sample}.bwa.sam
 
 echo "CIRI-AS done" && echo ${sample} && date
 
-## 2. RAISE
-echo "RAISE begin" && echo ${sample} && date
-cd $dir/${sample}
-time bash $circRNAwrap/circRNAwrap_RAISE.bash ${sample} ${threads} ${dir}
+
 
 echo "RAISE done" && echo ${sample} && date
 
 ## 3. CIRCexplorer2 version: 2 https://github.com/YangLab/CIRCexplorer2.git
 cd $dir/${sample}
 echo "circExplorer2 begin" && echo ${sample} && date
-cd ${sample}_tophat
+
 echo "circExplorer2 begin" && echo ${sample} && date
 #time $CIRCexplorer2 parse -t TopHat-Fusion tophat_fusion/accepted_hits.bam > CIRCexplorer2_parse.log
 #time $CIRCexplorer2 annotate -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed -o ${sample}.CIRCexplorer2.txt > CIRCexplorer2_annotate.log
-time $CIRCexplorer2 assemble -p $threads -r $gene_annotation_hg19 -m ${sample}_tophat -o assemble > CIRCexplorer2_assemble.log
+time $CIRCexplorer2 assemble -p $threads -r $gene_annotation_hg19 --remove-rRNA -m ${sample}_tophat -o assemble > CIRCexplorer2_assemble.log
 time $CIRCexplorer2 denovo -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed --abs abs --as as -m ../${sample}_tophat -d ../assemble -n $polyA_tophat -o denovo > CIRCexplorer2_denovo.log
 
 cd $dir/${sample}

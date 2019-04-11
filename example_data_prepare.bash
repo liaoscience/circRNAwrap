@@ -20,6 +20,8 @@ for sample in SRR1049826 SRR1049827 SRR1049828 SRR1049829 SRR1049830 SRR1049831 
 done
 
 
+
+
 #simulate reads
 cd /home/lilin/workdir/data/circRNA/simulate/
 

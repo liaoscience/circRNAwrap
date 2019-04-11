@@ -10,9 +10,10 @@
 ################# 8 linear RNA abundance analysis
 
 #add the samples
-sample=$1
-threads=$2
-dir=$3
+. $1/circRNAwrap.configs
+sample=$2
+threads=$3
+dir=$4
 cd $dir/${sample}
 
 
@@ -29,7 +30,13 @@ mkdir circRNA_validate
 
 #KNIFE 2
 awk '{if($5>=0.9 && /rev/) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6"\t"$8}' ./${sample}_KNIFE/circReads/combinedReports/${sample}_1__circJuncProbs.txt | awk -F '[:|\t]' '{print $1"\t"$3"\t"$5"\t"$1"_"$3"_"$5"\t"$12"\t"$7}' | sed '1d' | awk '{if($2>$3) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6; if($2<$3) print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' > ./circRNA_validate/${sample}.KNIFE.txt
+
+if [ ! -f ./${sample}_KNIFE/circReads/combinedReports/${sample}_1__circJuncProbs.txt ];then
+echo "no correct KNIFE output file"
+echo "try the naive file"
 awk '{if($4>0 && /rev/) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6"\t"$8}' ./${sample}_KNIFE/circReads/combinedReports/naive${sample}_1_report.txt | awk -F '[:|\t]' '{print $1"\t"$3"\t"$5"\t"$1"_"$3"_"$5"\t"$8"\t"$7}' | sed '1d' | awk '{if($2>$3) print $1"\t"$3"\t"$2"\t"$4"\t"$5"\t"$6; if($2<$3) print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' >> ./circRNA_validate/${sample}.KNIFE.txt
+fi
+
 sed -i '1i\chr\tstart\tend\tsample\tKNIFE\tstrand' ./circRNA_validate/${sample}.KNIFE.txt
 
 #find_circ 2
@@ -49,8 +56,12 @@ awk '{if($5>2) print $2"\t"$3-1"\t"$4"\t"$2"_"$3-1"_"$4"\t"$5"\t"$11}' ./${sampl
 sed -i '1i\chr\tstart\tend\tsample\tCIRI\tstrand' ./circRNA_validate/${sample}.CIRI2.txt
 
 #CIRCexplorer 2
-awk '{if($13>=2) print $1"\t"$2"\t"$3"\t"$1"_"$2"_"$3"\t"$13"\t"$6}' ./${sample}_CIRCexplorer2/${sample}_circ.txt > ./circRNA_validate/${sample}.CIRCexplorer2.txt
+awk '{if($13>=2) print $1"\t"$2"\t"$3"\t"$1"_"$2"_"$3"\t"$13"\t"$6}' ./${sample}_CIRCexplorer2/${sample}.CIRCexplorer2.txt > ./circRNA_validate/${sample}.CIRCexplorer2.txt
 sed -i '1i\chr\tstart\tend\tsample\tCIRCexplorer\tstrand' ./circRNA_validate/${sample}.CIRCexplorer2.txt
+
+#CIRCexplorer
+awk '{if($13>=2) print $1"\t"$2"\t"$3"\t"$1"_"$2"_"$3"\t"$13"\t"$6}' ./${sample}_CIRCexplorer/${sample}_circ.txt > ./circRNA_validate/${sample}.CIRCexplorer.txt
+sed -i '1i\chr\tstart\tend\tsample\tCIRCexplorer\tstrand' ./circRNA_validate/${sample}.CIRCexplorer.txt
 
 #circRNA_finder STAR 2
 awk '{if($5>=2) print $1"\t"$2"\t"$3"\t"$1"_"$2"_"$3"\t"$5"\t"$6}' ./${sample}_circRNA_finder/${sample}.circRNA_finder.bed > ./circRNA_validate/${sample}.circRNA_finder.txt #unique mapped 3
@@ -61,13 +72,14 @@ awk -F '[~\t]' '{ if($1==$2 && $3>$4 && $3<=$4+100000 && $6>=2 && ($7~/\+\+/ || 
 sed -i '1i\chr\tstart\tend\tsample\tmapsplice\tstrand' ./circRNA_validate/${sample}.mapsplice.txt
 
 #DCC 2
-awk '{if($5>=2) print $1"\t"$2"\t"$3"\t"$1"_"$2"_"$3"\t"$13"\t"$6}' ./${sample}_DCC/CircCoordinates > ./circRNA_validate/${sample}.DCC.txt
-sed -i '1i\chr\tstart\tend\tsample\tCIRCexplorer\tstrand' ./circRNA_validate/${sample}.DCC.txt
+awk '{if(NR>1 && $1>=2) print $2"\t"$3"\t"$4"\t"$2"_"$3"_"$4"\t"$1"\t"$7}' ./${sample}_DCC/${sample}.DCC.txt > ./circRNA_validate/${sample}.DCC.txt
+sed -i '1i\chr\tstart\tend\tsample\tDCC\tstrand' ./circRNA_validate/${sample}.DCC.txt
 
 
 cat ./circRNA_validate/*.txt | awk '!a[$1"\t"$2"\t"$3]++' > ./circRNA_validate/${sample}.tools.txt
 awk '{if(!/start/) print }' ./circRNA_validate/${sample}.tools.txt > ./circRNA_validate/${sample}1.tools.bed
 awk '{i++; print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"i }' ./circRNA_validate/${sample}1.tools.bed > ./circRNA_validate/${sample}.tools.bed
+awk '{ print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' ./circRNA_validate/${sample}.tools.bed > ./circRNA_validate/${sample}.circ.bed
 
 
 
@@ -82,7 +94,7 @@ $bedtools getfasta -fi $genome -bed short125.bed -fo circRNA_short.fa -s
 paste circRNA_short.fa circRNA_short.fa circRNA_short.fa circRNA_short.fa > short.fa
 
 # long circRNA
-awk '{if($3-$2>125) print }' ${sample}.circ.bed > long125.bed
+awk '{if($3-$2>125 && $3-$2<1000000) print }' ${sample}.circ.bed > long125.bed
 #reference
 $bedtools getfasta -fi $genome -bed long125.bed -fo circRNA_long.fa -s
 #repeat twice

@@ -271,6 +271,8 @@ echo ${dir}${sample}/${sample}_DCC/${sample}_DCCChimeric.out.junction > samplesh
 
 $DCC -T 12 @samplesheet -mt1 @mate1 -mt2 @mate2 -F -D -R $REP -an $GTF -Pi -M -Nr 2 1 -fg -G -N -A $genome -B @bam
 
+awk 'NR==FNR{a[$1"\t"$2"\t"$3]=$4;next}NR>FNR{if($1"\t"$2"\t"$3 in a)print a[$1"\t"$2"\t"$3]"\t"$0}' CircRNACount CircCoordinates > ${sample}.DCC.txt
+
 echo "DCC done" && echo ${sample} && date
 
 
