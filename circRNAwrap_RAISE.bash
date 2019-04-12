@@ -110,6 +110,8 @@ $samtools faidx total.repeat.fa
 rm total.repeat1.fa
 rm total.fa
 ${hisat2_build} -p $threads total.repeat.fa total.repeat
+cd ..
+awk -F '[()\t]' '{left=int($4/2)-1; right=int($4/2)+1; print $1"("$2")""\t"left"\t"right"\t"$4"\t1\t"$2}' ./index/total.repeat.fa.fai > ./index/ref2bp.bed
 
 ########################################################################### 3 RAISE abundance
 cd $dir/${sample}
@@ -118,13 +120,13 @@ $bedtools bamtobed -split -bed12 -i ${sample}.hisat2.bam > accepted_hits.bed
 awk -F '[@_\t/]' 'NR==FNR{a[$2]=$0;next}NR>FNR{if($4 in a)print $0}' unmapped.title accepted_hits.bed > unmapped.mapped.bed
 rm accepted_hits.bed
 rm unmapped.title
-$hisat2 -p $threads --mm --dta -x ./circRNA_validate/index/total.repeat -U ${sample}.unmap.fq -S ./circRNA_validate/${sample}.unmap.sam 2> ${sample}.circmap.rate 
+$hisat2 -p $threads --mm --dta -x ./circRNA_validate/index/total.repeat -U ${sample}.unmap.fq -S ./circRNA_validate/${sample}.unmap.sam 2> ${sample}.circmap.rate
 $samtools sort -@ $threads -o ./circRNA_validate/${sample}.unmap.bam ./circRNA_validate/${sample}.unmap.sam
 $samtools rmdup -S ./circRNA_validate/${sample}.unmap.bam --reference ./circRNA_validate/index/total.repeat ./circRNA_validate/rmdup.bam
 $bedtools bamtobed -split -bed12 -i ./circRNA_validate/rmdup.bam > ./circRNA_validate/rmdup.bed
 #sed -i 's/__/\//g' ./circRNA_validate/rmdup.bed
 $bedtools bamtobed -split -bed12 -i ./circRNA_validate/${sample}.unmap.bam > ./circRNA_validate/accepted_hits.bed
-sed -i 's/__/\//g' ./circRNA_validate/accepted_hits.bed
+#sed -i 's/__/\//g' ./circRNA_validate/accepted_hits.bed
 $bedtools intersect -split -wa -wb -abam ./circRNA_validate/${sample}.unmap.bam -b ./circRNA_validate/index/ref2bp.bed -bed | awk '!a[$0]++' > circ_splice.reads
 sed -i 's/__/\//g' circ_splice.reads   #get whole circRNA splice reads in the splice site
 awk -F '[_\t/]' 'NR==FNR{a[$4]=a[$4]$0" ";next}NR>FNR{if($4 in a)print $0"\t"a[$4]}' unmapped.mapped.bed circ_splice.reads > tmp.pair.circ_splice.reads
@@ -207,6 +209,7 @@ cat ${sample}.tmp.circ.txt | sed 's/(-)/ nega/g' | sed 's/(+)/ posi/g' | awk -F 
 $bedtools sort -i ${sample}.circ1.bed > ${sample}.circ.bed
 
 awk '{print $1,$2-1,$2+1,$4,"up",$6"\n"$1,$3-1,$3+1,$4,"down",$6 }' ${sample}.circ.bed | sed 's/ /\t/g' > ${sample}.tmp.2.circ.bed
+$samtools index ${sample}.hisat2.rmdup.bam
 $mosdepth -t $threads --by ${sample}.tmp.2.circ.bed ${sample}.tmp.mos ${sample}.hisat2.rmdup.bam
 gunzip ${sample}.tmp.mos.regions.bed.gz
 awk '{a[$4]=a[$4](a[$4]?"\t":"")$5;}END{for (j in a) print j"\t"a[j]}' ${sample}.tmp.mos.regions.bed | sed '1i\circrna\tleft\tright' > ${sample}.tmp.mos

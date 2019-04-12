@@ -35,10 +35,6 @@ echo "------------------------------"
 #### sample_1.fastq
 #### sample_2.fastq
 
-## 2. RAISE
-echo "RAISE begin" && echo ${sample} && date
-cd $dir/${sample}
-time bash $circRNAwrap/circRNAwrap_RAISE.bash $1 ${sample} ${threads} ${dir}
 
 
 ## 1. CIRI-AS version: 1.2, URL: https://sourceforge.net/projects/ciri/files/CIRI-AS/
@@ -57,6 +53,10 @@ rm ${sample}.bwa.sam
 
 echo "CIRI-AS done" && echo ${sample} && date
 
+## 2. RAISE
+echo "RAISE begin" && echo ${sample} && date
+cd $dir/${sample}
+time bash $circRNAwrap/circRNAwrap_RAISE.bash $1 ${sample} ${threads} ${dir}
 
 
 echo "RAISE done" && echo ${sample} && date
@@ -85,6 +85,6 @@ echo "sailfish_cir begin" && echo ${sample} && date
 if [ ! -d ${sample}_sailfish ];then
         mkdir ${sample}_sailfish
 fi
-awk '{print $1"\t"$2"\t"$3"\t"$1"_"$2"_"$3"_"$6"\t"$5"\t"$6}' ./circRNA_validate/${sample}.circ.txt > ./sailfish/$sample.circ.bed
+awk '{print $1"\t"$2"\t"$3"\t"$1"_"$2"_"$3"_"$6"\t"$5"\t"$6}' ./circRNA_validate/${sample}.circ.bed > ./sailfish/$sample.circ.bed
 time python $sailfish_cir -g $genome -a $GTF -1 ./${sample}_1.fastq -2 ./${sample}_2.fastq -o ./sailfish --bed ./sailfish/$sample.circ.bed
 echo "sailfish_cir done" && echo ${sample} && date
