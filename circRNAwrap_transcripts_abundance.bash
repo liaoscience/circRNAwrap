@@ -69,13 +69,13 @@ echo "circExplorer2 begin" && echo ${sample} && date
 #time $CIRCexplorer2 parse -t TopHat-Fusion tophat_fusion/accepted_hits.bam > CIRCexplorer2_parse.log
 #time $CIRCexplorer2 annotate -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed -o ${sample}.CIRCexplorer2.txt > CIRCexplorer2_annotate.log
 time $CIRCexplorer2 assemble -p $threads -r $gene_annotation_hg19 --remove-rRNA -m ${sample}_tophat -o assemble > CIRCexplorer2_assemble.log
+cd ./${sample}_tophat
+$samtools index -@ $threads accepted_hits.bam
 time $CIRCexplorer2 denovo -r $gene_annotation_hg19 -g $genome -b back_spliced_junction.bed --abs abs --as as -m ../${sample}_tophat -d ../assemble -n $polyA_tophat -o denovo > CIRCexplorer2_denovo.log
-
 cd $dir/${sample}
 cp -r ./${sample}_tophat/as ./${sample}_CIRCexplorer2
 cp -r ./${sample}_tophat/abs ./${sample}_CIRCexplorer2
 cp -r ./${sample}_tophat/denovo ./${sample}_CIRCexplorer2
-
 
 echo "circExplorer2 done" && echo ${sample} && date
 
@@ -85,6 +85,6 @@ echo "sailfish_cir begin" && echo ${sample} && date
 if [ ! -d ${sample}_sailfish ];then
         mkdir ${sample}_sailfish
 fi
-awk '{print $1"\t"$2"\t"$3"\t"$1"_"$2"_"$3"_"$6"\t"$5"\t"$6}' ./circRNA_validate/${sample}.circ.bed > ./sailfish/$sample.circ.bed
-time python $sailfish_cir -g $genome -a $GTF -1 ./${sample}_1.fastq -2 ./${sample}_2.fastq -o ./sailfish --bed ./sailfish/$sample.circ.bed
+awk '{print $1"\t"$2"\t"$3"\t"$1"_"$2"_"$3"_"$6"\t"$5"\t"$6}' ./circRNA_validate/${sample}.circ.bed > ./${sample}_sailfish/$sample.circ.bed
+time python $sailfish_cir -g $genome -a $GTF -1 ./${sample}_1.fastq -2 ./${sample}_2.fastq -o ./${sample}_sailfish --bed ./${sample}_sailfish/$sample.circ.bed
 echo "sailfish_cir done" && echo ${sample} && date
