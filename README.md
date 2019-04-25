@@ -43,6 +43,8 @@ These scripts have been tested on various Linux distributions. Before they can b
  - github
 
 
+tips: for some software need different dependence, so if you use conda to install the software, you would better create a specific environment: examples is conda create -n name; source activate name; conda install dependence
+
 before run the scripts, firstly, prepare the index and annotation files. owning to that we applied several different tools for circRNA identification, so we have to inistall the tools, and prepare the index for each softwares.
 
 the detail in index and annotation, which include tools install, index and annotation prepare  
@@ -106,4 +108,11 @@ sample.txt:
 -   sample2
 -   sample3
 -   sample4
+
+
+# further analysis, we recommend use R package Ularcirc, for circRAN view, miRNA target prediction, R package Circtest, for circRNA differential expressed analysis
+
+# Ularcirc prepare, STAR output files,
+# Circtest prepare, circRNA abundance profile, linear RNA abundance profile which from sailfish-cir
+
 
