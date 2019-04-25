@@ -110,9 +110,9 @@ sample.txt:
 -   sample4
 
 
-# further analysis, we recommend use R package Ularcirc, for circRAN view, miRNA target prediction, R package Circtest, for circRNA differential expressed analysis
+#### further analysis, we recommend use R package Ularcirc, for circRAN view, miRNA target prediction, R package Circtest, for circRNA differential expressed analysis
 
-# Ularcirc prepare, STAR output files,
-# Circtest prepare, circRNA abundance profile, linear RNA abundance profile which from sailfish-cir
+#### Ularcirc prepare, STAR output files,
+#### Circtest prepare, circRNA abundance profile, linear RNA abundance profile which from sailfish-cir
 
 
