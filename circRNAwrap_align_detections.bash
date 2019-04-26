@@ -60,12 +60,13 @@ if [ ! -d ${sample}_KNIFE ];then
         mkdir ${sample}_KNIFE
 fi
 cd $KNIFE
+source activate KNIFE
 echo "KNIFE begin" && echo ${sample} && date
 time bash completeRun.sh $dir/${sample}/ complete $dir/${sample}/ ${sample}_KNIFE 13 sam 2>&1 | tee $dir/${sample}/${sample}_KNIFE.log
 cd $dir/${sample}
 rm -r ${sample}_KNIFESwapped
 echo "KNIFE done" && echo ${sample} && date
-
+source deactivate KNIFE
 
 ## 2. find_circ https://github.com/marvin-jens/find_circ.git
 cd $dir/${sample}
@@ -74,6 +75,7 @@ awk '{i++; if(NR%4==1) print "@"i; else{print }}' ./${sample}_1.fastq > ${sample
 awk '{i++; if(NR%4==1) print "@"i; else{print }}' ./${sample}_2.fastq > ${sample}_2.fq
 time $bowtie2 -p $threads --very-sensitive --phred33 --mm -M20 --score-min=C,-15,0 -x $bowtie2_index -q -1 ./${sample}_1.fq -2 ./${sample}_2.fq > ${sample}.bowtie2.sam 2> bowtie2.log
 time $samtools sort -@ $threads -o ${sample}.bowtie2.bam ${sample}.bowtie2.sam
+rm ${sample}.bowtie2.sam
 time $samtools view -hf 4 ${sample}.bowtie2.bam | samtools view -Sb - > ${sample}_unmapped_bowtie2.bam
 time $find_circ/unmapped2anchors.py ${sample}_unmapped_bowtie2.bam > ${sample}_anchor.fastq
 if [ ! -d ${sample}_find_circ ];then
@@ -163,6 +165,16 @@ if [ ! -d ${sample}_CIRCexplorer ];then
         mkdir ${sample}_CIRCexplorer
 fi
 time $STAR --genomeDir $STAR_index --readFilesIn ./${sample}_1.fastq ./${sample}_2.fastq --runThreadN $threads --chimSegmentMin 20 --chimScoreMin 1 --alignIntronMax 100000 --outFilterMismatchNmax 4 --alignTranscriptsPerReadNmax 100000 --outFilterMultimapNmax 2 --outFileNamePrefix ./${sample} --outSAMtype BAM Unsorted
+
+## prepare data for Ularcirc
+if [ ! -d ${sample}_Ularcirc ];then
+        mkdir ${sample}_Ularcirc
+fi
+cp ${sample}Chimeric.out.junction ./${sample}_Ularcirc/
+cp ${sample}Chimeric.out.junction.tab ./${sample}_Ularcirc/
+
+cp ${sample}.Chimeric.out.junction ./${sample}_Ularcirc/
+cp ${sample}.Chimeric.out.junction.tab ./${sample}_Ularcirc/
 
 time python $CIRCexplorer/circ/star_parse.py ${sample}Chimeric.out.junction ${sample}_CIRCexplorer/${sample}_junction.txt && \
 time python $CIRCexplorer/circ/CIRCexplorer.py -j ${sample}_CIRCexplorer/${sample}_junction.txt -g $genome -r $CIRCexplorer/test/data/ref.txt -o ${sample}_CIRCexplorer/${sample}
