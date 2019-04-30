@@ -115,17 +115,24 @@ sample4
 #### further analysis
 we recommend use R package Ularcirc, for circRAN view, miRNA target prediction, R package CircTest, for circRNA differential expressed analysis, circPrimer, for circRNA primer design.
 
-#### Ularcirc prepare
+#### Ularcirc prepare 
+https://bioconductor.org/packages/release/bioc/html/Ularcirc.html
 STAR output files
 ```
 ${sample}.SJ.out.tab
 ${sample}.Chimeric.out.junction
 ```
+
+
+#### circPrimer
+http://www.bioinf.com.cn/
+
+
 #### CircTest prepare
-circRNA abundance profile, linear RNA abundance profile which from sailfish-cir
+https://github.com/dieterich-lab/CircTest
+circRNA abundance profile, linear RNA abundance profile which from RAISE and DCC
 ```
 ${sample}/sailfish/quant_circular/quant.sf
 ```
 
-#### circPrimer
 

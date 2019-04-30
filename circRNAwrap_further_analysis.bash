@@ -31,8 +31,17 @@ echo "the work direction is:          " $dir
 echo "------------------------------"
 
 
-# Ularcirc data prepare STAR output tab junctions, prepare in align and detection step.
+# circPrimer for circRNAs
+awk '{if(/^chr/) print $1}' ./${sample}/sailfish/quant_circular/quant.sf > ${sample}.circPrimer.list
+
+awk '{if(/^chr/ || NR==1) print $1"\t"$5}' ./${sample}/sailfish/quant_circular/quant.sf > ${sample}.circRNA.profile
+awk '{if(!/^chr/) print $1"\t"$5}' ./${sample}/sailfish/quant_circular/quant.sf > ${sample}.linearRNA.profile
 
 # Circtest prepare, linear abundance, circRNA abundance
+
+# Ularcirc data prepare STAR output tab junctions, prepare in align and detection step.
+
+
+
 
 
