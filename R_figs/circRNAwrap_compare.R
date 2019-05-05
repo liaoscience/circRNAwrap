@@ -1,0 +1,41 @@
+BiocManager::install(c("colorspace","ggpmisc"), version = "3.8")
+
+library("ggplot2")
+library(ggforce)
+library(ggpubr)
+library(ggpmisc)
+library(dplyr)
+setwd("E:/work_tmp/OneDrive/circRNA_tools_compare/result/raw_result/sailfish_compare/")
+
+SRR<-read.table("SRR1049833.abundance.txt",header=T,sep="\t",row.names = 1)
+SRR <- data.frame(SRR)
+ggplot(SRR, aes(x=sailfish,y=abundance,color=tools)) + geom_point() + theme_classic() + xlim(0,100) + ylim(0,100) + geom_smooth(method=lm) + geom_rug(sides ="bl") + geom_density_2d() + stat_ellipse(type = "norm") + geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
+
+setwd("E:/work_tmp/OneDrive/circRNA_tools_compare/result/raw_result/sailfish_compare/")
+SRR<-read.table("./SRR1049829nostrand/SRR1049829.abundance1.txt",header=T,sep="\t",row.names = 1)
+SRR <- data.frame(SRR)
+g1 <- ggplot(SRR, aes(x=RAISE,y=abundance,color=tools)) + geom_point() + theme_classic() + xlim(0,100) + ylim(0,100) + geom_smooth(method=lm) + geom_rug(sides ="bl") + labs(x="RAISE",y="tools",title="") + theme(title=element_text(size=14,color="black",hjust=0.2,lineheight=0.2), axis.title.x=element_text(size=12,color="black",hjust=0.5), axis.title.y=element_text(size=12,color="black",hjust=0.5), axis.text.x=element_text(size=12,color="black") ) +theme(legend.text = element_text( size = 12))
+
+SRR<-read.table("./SRR1049833nostrand/SRR1049833.abundance1.txt",header=T,sep="\t",row.names = 1)
+SRR <- data.frame(SRR)
+g2 <- ggplot(SRR, aes(x=RAISE,y=abundance,color=tools)) + geom_point() + theme_classic() + xlim(0,1000) + ylim(0,1000) + geom_smooth(method=lm) + geom_rug(sides ="bl") + labs(x="RAISE",y="tools",title="") + theme(title=element_text(size=14,color="black",hjust=0.2,lineheight=0.2), axis.title.x=element_text(size=12,color="black",hjust=0.5), axis.title.y=element_text(size=12,color="black",hjust=0.5), axis.text.x=element_text(size=12,color="black") ) +theme(legend.text = element_text( size = 12))
+SRR<-read.table("SRR1049829.abundance.txt",header=T,sep="\t",row.names = 1)
+SRR <- data.frame(SRR)
+g3 <- ggplot(SRR, aes(x=sailfish,y=abundance,color=tools)) + geom_point() + theme_classic() + xlim(0,100) + ylim(0,100) + geom_smooth(method=lm) + geom_rug(sides ="bl") + labs(x="sailfish-cir",y="RAISE",title="") + theme(title=element_text(size=14,color="black",hjust=0.2,lineheight=0.2), axis.title.x=element_text(size=12,color="black",hjust=0.5), axis.title.y=element_text(size=12,color="black",hjust=0.5), axis.text.x=element_text(size=12,color="black") ) +theme(legend.text = element_text( size = 12))
+SRR<-read.table("SRR1049833.abundance.txt",header=T,sep="\t",row.names = 1)
+SRR <- data.frame(SRR)
+g4 <- ggplot(SRR, aes(x=sailfish,y=abundance,color=tools)) + geom_point() + theme_classic() + xlim(0,100) + ylim(0,100) + geom_smooth(method=lm) + geom_rug(sides ="bl") + labs(x="sailfish-cir",y="RAISE",title="") + theme(title=element_text(size=14,color="black",hjust=0.2,lineheight=0.2), axis.title.x=element_text(size=12,color="black",hjust=0.5), axis.title.y=element_text(size=12,color="black",hjust=0.5), axis.text.x=element_text(size=12,color="black") ) +theme(legend.text = element_text( size = 12))
+
+library("gridExtra")
+p <- grid.arrange(g1, g2, g3, g4, ncol=2, nrow=2)
+require(grid)
+pdf("abundance.pdf", height=10, width=13)
+plot(p)
+dev.off()
+
+p <- ggarrange(g1, g2, g3, g4, labels = c("A", "B", "C", "D"), ncol = 2, nrow = 2)
+
+require(grid)
+pdf("abundance1.pdf", height=10, width=13)
+plot(p)
+dev.off()
